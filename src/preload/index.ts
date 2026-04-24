@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
-import type { NavimintBridge } from '../shared/preload/api';
+import { NAVIMINT_BRIDGE_KEY, type NavimintBridge } from '../shared/preload/api';
 import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
 
 /*
@@ -10,7 +10,6 @@ import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
  * `require()` calls against emitted JS under `dist/`, so IPC channel strings
  * stay aligned with main via `IPC_CHANNELS` in `src/shared/types/ipc.ts`.
  */
-const NAVIMINT_BRIDGE_KEY = 'navimint';
 
 const bridge: NavimintBridge = {
   loadScreensDocument: (): Promise<LoadScreensResult> =>
