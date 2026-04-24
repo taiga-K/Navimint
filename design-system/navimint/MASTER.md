@@ -71,26 +71,26 @@ UI は派手さよりも、情報の可読性、選択状態の明快さ、長�
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--bg-app` | `#121212` | アプリ全体の背景（main） |
-| `--bg-panel` | `#1A1A1A` | サイドバー、詳細ペイン |
-| `--bg-panel-muted` | `#0A0A0A` | ステータスバー、補助領域 |
-| `--bg-elevated` | `#262626` | ホバー、入力欄、選択候補 |
-| `--bg-selected` | `#2F2F2F` | 選択状態の面 |
-| `--border-subtle` | `#2E2E2E` | 通常境界 |
-| `--border-strong` | `#515151` | パネル区切り、カード境界（base） |
-| `--text-primary` | `#F5F5F5` | 主テキスト |
-| `--text-secondary` | `#C8C8C8` | 補足説明 |
-| `--text-muted` | `#919191` | ラベル、メタ情報（assets） |
-| `--accent-primary` | `#60A5FA` | フォーカス、選択、リンク |
-| `--accent-success` | `#22C55E` | Preview 成功、実行状態 |
-| `--accent-warning` | `#F59E0B` | 注意 |
-| `--accent-danger` | `#F87171` | エラー、削除 |
-| `--accent-node` | `#A78BFA` | グラフ補助アクセント |
+| `--color-app` | `#121212` | アプリ全体の背景（main） |
+| `--color-panel` | `#1A1A1A` | サイドバー、詳細ペイン |
+| `--color-panel-muted` | `#0A0A0A` | ステータスバー、補助領域 |
+| `--color-elevated` | `#262626` | ホバー、入力欄、選択候補 |
+| `--color-selected` | `#2F2F2F` | 選択状態の面 |
+| `--color-border-subtle` | `#2E2E2E` | 通常境界 |
+| `--color-border-strong` | `#515151` | パネル区切り、カード境界（base） |
+| `--color-text-primary` | `#F5F5F5` | 主テキスト |
+| `--color-text-secondary` | `#C8C8C8` | 補足説明 |
+| `--color-text-muted` | `#919191` | ラベル、メタ情報（assets） |
+| `--color-accent-primary` | `#60A5FA` | フォーカス、選択、リンク |
+| `--color-accent-success` | `#22C55E` | Preview 成功、実行状態 |
+| `--color-accent-warning` | `#F59E0B` | 注意 |
+| `--color-accent-danger` | `#F87171` | エラー、削除 |
+| `--color-accent-node` | `#A78BFA` | グラフ補助アクセント |
 
 ### Semantic Usage
 
 - **無彩色を基調にする:** 背景・境界・テキストは achromatic（グレースケール）に揃える
-- **常用アクセントは 1 色に絞る:** 基本は `--accent-primary`
+- **常用アクセントは 1 色に絞る:** 基本は `--color-accent-primary`
 - **成功 / 警告 / エラーは accent 系を使い続ける:** これらの意味色はグレースケール化しない
 - **画面固有 color は補助扱い:** `screens.json` の `color` はノード識別にのみ使い、UI 全体のテーマ色にはしない
 - **境界線で構造を作る:** 背景差だけで区切らず、1px border を積極的に使う
@@ -102,15 +102,15 @@ Light mode を用意する場合も、ニュートラルな achromatic 軸を維
 
 | Token | Hex |
 |---|---|
-| `--bg-app` | `#FAFAFA` |
-| `--bg-panel` | `#FFFFFF` |
-| `--bg-elevated` | `#F0F0F0` |
-| `--border-subtle` | `#E0E0E0` |
-| `--border-strong` | `#515151` |
-| `--text-primary` | `#121212` |
-| `--text-secondary` | `#515151` |
-| `--text-muted` | `#919191` |
-| `--accent-primary` | `#2563EB` |
+| `--color-app` | `#FAFAFA` |
+| `--color-panel` | `#FFFFFF` |
+| `--color-elevated` | `#F0F0F0` |
+| `--color-border-subtle` | `#E0E0E0` |
+| `--color-border-strong` | `#515151` |
+| `--color-text-primary` | `#121212` |
+| `--color-text-secondary` | `#515151` |
+| `--color-text-muted` | `#919191` |
+| `--color-accent-primary` | `#2563EB` |
 
 ## 4. Typography
 
@@ -200,20 +200,20 @@ Light mode を用意する場合も、ニュートラルな achromatic 軸を維
 ### Navigation List
 
 - 各項目は **1 行目に画面名、2 行目に route**
-- 選択状態は `--bg-selected` と `--accent-primary` の左ボーダーで明示
-- hover は背景を `--bg-elevated` に上げる
+- 選択状態は `--color-selected` と `--color-accent-primary` の左ボーダーで明示
+- hover は背景を `--color-elevated` に上げる
 - クリック可能な行には必ず `cursor: pointer`
 
 ### Search Input
 
 - 高さは `36px` 前後
-- アイコンは左固定、placeholder は `--text-muted`
-- focus 時は `--accent-primary` の ring を表示
+- アイコンは左固定、placeholder は `--color-text-muted`
+- focus 時は `--color-accent-primary` の ring を表示
 
 ### Graph Node
 
-- ノード本体は `--bg-panel` または `--bg-elevated`
-- 境界線は `--border-strong`
+- ノード本体は `--color-panel` または `--color-elevated`
+- 境界線は `--color-border-strong`
 - 選択中ノードは 1px 強調 border + soft glow
 - ラベルは 1 行優先、補助情報は小さく 2 行目に置く
 - ノード色は screen color を小さなチップで見せる
@@ -231,9 +231,9 @@ Light mode を用意する場合も、ニュートラルな achromatic 軸を維
 
 ### Buttons
 
-- Primary button は `--accent-primary` ではなく、文脈で使い分ける  
-  - 主操作: `--accent-primary`
-  - 成功系操作: `--accent-success`
+- Primary button は `--color-accent-primary` だけに寄せず、文脈で使い分ける  
+  - 主操作: `--color-accent-primary`
+  - 成功系操作: `--color-accent-success`
 - hover では scale しない。色差と border 差だけ使う
 
 ## 8. Motion & Interaction
@@ -266,30 +266,33 @@ Light mode を用意する場合も、ニュートラルな achromatic 軸を維
 
 ### Recommended CSS Variable Set
 
+実装の一次ソースは `src/renderer/styles/global.css` の `@theme` ブロック（Tailwind v4 のテーマ変数として `--color-*` を定義）。概念整理用のダーク例:
+
 ```css
-:root {
-  color-scheme: dark;
-  --bg-app: #121212;
-  --bg-panel: #1a1a1a;
-  --bg-panel-muted: #0a0a0a;
-  --bg-elevated: #262626;
-  --bg-selected: #2f2f2f;
-  --border-subtle: #2e2e2e;
-  --border-strong: #515151;
-  --text-primary: #f5f5f5;
-  --text-secondary: #c8c8c8;
-  --text-muted: #919191;
-  --accent-primary: #60a5fa;
-  --accent-success: #22c55e;
-  --accent-warning: #f59e0b;
-  --accent-danger: #f87171;
-  --accent-node: #a78bfa;
+@theme {
+  --color-app: #121212;
+  --color-panel: #1a1a1a;
+  --color-panel-muted: #0a0a0a;
+  --color-elevated: #262626;
+  --color-selected: #2f2f2f;
+  --color-border-subtle: #2e2e2e;
+  --color-border-strong: #515151;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #c8c8c8;
+  --color-text-muted: #919191;
+  --color-accent-primary: #60a5fa;
+  --color-accent-success: #22c55e;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #f87171;
+  --color-accent-node: #a78bfa;
 }
 ```
 
+コンポーネントでは Tailwind の `bg-app` / `text-text-primary` などがこれらの `--color-*` にマップされる。
+
 ### React Guidance
 
-`ui-ux-pro-max` の stack guidance に従い、次を標準方針とする。
+Navimint の標準方針として、次を推奨する。
 
 - 壊れても全体を巻き込まないように、主要ペイン単位で **Error Boundary** を検討する
 - テーマや表示設定のような低頻度更新だけを **Context** に乗せる

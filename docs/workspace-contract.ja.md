@@ -178,8 +178,7 @@ orphan screen の場合、`Transitions` は 0 件表示になる。
 
 - preview URL は `previewBaseUrl + route` で生成する
 - 動的 route もそのまま URL に連結する
-- `previewBaseUrl` は UI から更新できる
-- 更新された `previewBaseUrl` は保存対象である
+- `previewBaseUrl` は UI から更新できる（永続化・ディスク保存は本リリースでは未実装とし、将来の契約として扱う）
 
 ## 初期状態
 
