@@ -56,6 +56,45 @@ export function useWorkspaceSync(): void {
 
   useEffect(() => {
     let active = true;
+    let loadGeneration = 0;
+
+    const startDocumentLoad = (): void => {
+      loadGeneration += 1;
+      const generation = loadGeneration;
+      void (async () => {
+        dispatch({ type: 'load-started' });
+        try {
+          const result = await window.navimint.loadScreensDocument();
+          if (generation !== loadGeneration) {
+            return;
+          }
+          if (result.ok) {
+            dispatch({ type: 'document-loaded', document: result.document });
+            return;
+          }
+          dispatch({
+            type: 'document-load-failed',
+            failure: {
+              reason: result.reason,
+              message: result.message,
+              filePath: result.filePath,
+            },
+          });
+        } catch (error) {
+          if (generation !== loadGeneration) {
+            return;
+          }
+          dispatch({
+            type: 'document-load-failed',
+            failure: {
+              reason: 'unexpected-error',
+              message: error instanceof Error ? error.message : String(error),
+              filePath: null,
+            },
+          });
+        }
+      })();
+    };
 
     void (async () => {
       const projectRoot = await window.navimint.getProjectRoot();
@@ -63,16 +102,17 @@ export function useWorkspaceSync(): void {
         return;
       }
       dispatch({ type: 'project-root-changed', projectRoot });
-      await loadAndDispatch(dispatch);
+      startDocumentLoad();
     })();
 
     const unsubscribe = window.navimint.onProjectRootChanged((projectRoot) => {
       dispatch({ type: 'project-root-changed', projectRoot });
-      void loadAndDispatch(dispatch);
+      startDocumentLoad();
     });
 
     return () => {
       active = false;
+      loadGeneration += 1;
       unsubscribe();
     };
   }, [dispatch]);
@@ -89,30 +129,3 @@ export function useOpenProjectFolder(): () => void {
   }, []);
 }
 
-async function loadAndDispatch(dispatch: Dispatch<WorkspaceAction>): Promise<void> {
-  dispatch({ type: 'load-started' });
-  try {
-    const result = await window.navimint.loadScreensDocument();
-    if (result.ok) {
-      dispatch({ type: 'document-loaded', document: result.document });
-      return;
-    }
-    dispatch({
-      type: 'document-load-failed',
-      failure: {
-        reason: result.reason,
-        message: result.message,
-        filePath: result.filePath,
-      },
-    });
-  } catch (error) {
-    dispatch({
-      type: 'document-load-failed',
-      failure: {
-        reason: 'unexpected-error',
-        message: error instanceof Error ? error.message : String(error),
-        filePath: null,
-      },
-    });
-  }
-}

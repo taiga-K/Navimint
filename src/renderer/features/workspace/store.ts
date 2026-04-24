@@ -74,10 +74,14 @@ function reduceProjectRootChanged(
   if (state.projectRoot === nextProjectRoot) {
     return state;
   }
-  // Switching projects drops selection and search since they referenced the previous screens.json.
+  // Switching projects clears document-derived state until the new load completes.
   return {
     ...state,
     projectRoot: nextProjectRoot,
+    document: null,
+    loadState: 'loading',
+    loadFailure: null,
+    previewBaseUrl: null,
     selectedScreenId: null,
     searchQuery: '',
   };
