@@ -78,12 +78,14 @@ export function useWorkspaceSync(): void {
   }, [dispatch]);
 }
 
-/** Imperative trigger for the renderer-side "Open Folder" affordance. */
-export function useOpenProjectFolder(): () => Promise<void> {
-  return useCallback(async () => {
-    await window.navimint.openProjectDialog();
-    // The main process broadcasts `projectRootChanged`, which `useWorkspaceSync`
-    // turns into a reload. No additional dispatch is required here.
+/**
+ * Imperative trigger for the renderer-side "Open Folder" affordance.
+ * The main process broadcasts `projectRootChanged`, which `useWorkspaceSync`
+ * turns into a reload, so no additional dispatch is required here.
+ */
+export function useOpenProjectFolder(): () => void {
+  return useCallback(() => {
+    void window.navimint.openProjectDialog();
   }, []);
 }
 

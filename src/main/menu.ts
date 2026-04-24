@@ -38,9 +38,7 @@ export function buildAppMenu({ onOpenProject }: BuildAppMenuOptions): Menu {
       {
         label: 'Open Folder...',
         accelerator: 'CmdOrCtrl+O',
-        click: () => {
-          onOpenProject();
-        },
+        click: onOpenProject,
       },
       { type: 'separator' },
       isMac ? { role: 'close' } : { role: 'quit' },

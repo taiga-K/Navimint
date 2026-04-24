@@ -4,11 +4,7 @@ import type {
   WorkspaceState,
 } from '@shared/types';
 
-/**
- * `selectedScreenId` stays `null` after loading per the workspace contract.
- * Both `projectRoot` and `loadFailure` start as `null` because we do not yet
- * know what the main process will report.
- */
+/** Per the workspace contract, `selectedScreenId` stays `null` until the user picks one. */
 export const initialWorkspaceState: WorkspaceState = {
   projectRoot: null,
   document: null,
@@ -76,12 +72,9 @@ function reduceProjectRootChanged(
   nextProjectRoot: string | null,
 ): WorkspaceState {
   if (state.projectRoot === nextProjectRoot) {
-    return { ...state, projectRoot: nextProjectRoot };
+    return state;
   }
-  /*
-   * Switching to a different project drops the selection and search context
-   * because the previous values reference a now-unrelated screens.json.
-   */
+  // Switching projects drops selection and search since they referenced the previous screens.json.
   return {
     ...state,
     projectRoot: nextProjectRoot,
