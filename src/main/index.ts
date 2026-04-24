@@ -23,7 +23,8 @@ async function loadRenderer(window: BrowserWindow): Promise<void> {
 }
 
 async function handleOpenProject(): Promise<void> {
-  const next = await showOpenProjectDialog(mainWindow);
+  const targetWindow = BrowserWindow.getFocusedWindow() ?? mainWindow;
+  const next = await showOpenProjectDialog(targetWindow);
   if (next !== null) {
     setProjectRoot(next);
   }
@@ -40,7 +41,9 @@ async function bootstrap(): Promise<void> {
   registerProjectIpc();
   installAppMenu({
     onOpenProject: () => {
-      void handleOpenProject();
+      void handleOpenProject().catch((error) => {
+        console.error('[main] handleOpenProject failed', error);
+      });
     },
   });
   onProjectRootChanged(broadcastProjectRoot);
@@ -65,7 +68,14 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       await bootstrap();
     }
-  })();
+  })().catch((error) => {
+    console.error('[main] activate bootstrap failed', error);
+  });
 });
 
-void app.whenReady().then(() => bootstrap());
+void app
+  .whenReady()
+  .then(() => bootstrap())
+  .catch((error) => {
+    console.error('[main] bootstrap failed', error);
+  });

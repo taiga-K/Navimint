@@ -19,13 +19,18 @@ export function getProjectRoot(): string | null {
  * actually changes. Pass `null` to mark the workspace as having no project.
  */
 export function setProjectRoot(next: string | null): void {
-  const normalised = next === null ? null : path.resolve(next);
+  const normalised =
+    next === null || next.trim() === '' ? null : path.resolve(next.trim());
   if (normalised === currentRoot) {
     return;
   }
   currentRoot = normalised;
   for (const listener of listeners) {
-    listener(currentRoot);
+    try {
+      listener(currentRoot);
+    } catch (error) {
+      console.error('[project-root] listener failed', error);
+    }
   }
 }
 

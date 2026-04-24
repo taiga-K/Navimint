@@ -22,7 +22,7 @@ function StatusBar() {
   const { state, derived } = useWorkspace();
   const total = state.document?.screens.length ?? 0;
   const orphans = derived.orphanScreenIds.length;
-  const selectedScreen = selectSelectedScreen(state.document, state.selectedScreenId);
+  const selectedScreen = selectSelectedScreen(derived.screenById, state.selectedScreenId);
   const projectLabel = state.document?.project.name ?? state.projectRoot;
 
   if (state.loadState === 'loading' || state.loadState === 'idle') {
@@ -47,7 +47,9 @@ function StatusBar() {
       )}
       <span>{total} screens</span>
       <span aria-hidden="true">·</span>
-      <span>{orphans} orphan</span>
+      <span>
+        {orphans} {orphans === 1 ? 'orphan' : 'orphans'}
+      </span>
       {selectedScreen === null ? null : (
         <>
           <span aria-hidden="true">·</span>

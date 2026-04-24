@@ -218,6 +218,10 @@ function describeFailure(failure: WorkspaceLoadFailure | null): string {
       return `screens.json has an unexpected shape: ${failure.message}`;
     case 'unexpected-error':
       return `Failed to load screens.json: ${failure.message}`;
+    default: {
+      const exhaustiveCheck: never = failure.reason;
+      return `Unknown error: ${String(exhaustiveCheck)}`;
+    }
   }
 }
 

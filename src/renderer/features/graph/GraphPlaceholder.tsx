@@ -2,8 +2,8 @@ import { selectSelectedScreen } from '../workspace/selectors';
 import { useWorkspace } from '../workspace/use-workspace';
 
 export function GraphPlaceholder() {
-  const { state } = useWorkspace();
-  const selectedScreen = selectSelectedScreen(state.document, state.selectedScreenId);
+  const { state, derived } = useWorkspace();
+  const selectedScreen = selectSelectedScreen(derived.screenById, state.selectedScreenId);
 
   return (
     <div className="flex h-full items-center justify-center px-6 text-sm text-text-muted">

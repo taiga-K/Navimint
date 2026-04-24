@@ -2,6 +2,17 @@ import type { ScreenDefinition } from '@shared/types';
 
 import { ScreenListItem } from './ScreenListItem';
 
+/** Lowercase slug safe for HTML `id` / `aria-labelledby` (spaces and non-alphanumeric → hyphens). */
+function sectionHeadingId(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\da-z]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const suffix = slug.length > 0 ? slug : 'untitled';
+  return `section-${suffix}`;
+}
+
 export interface ScreenSectionProps {
   title: string;
   screens: readonly ScreenDefinition[];
@@ -23,12 +34,14 @@ export function ScreenSection({
     return null;
   }
 
+  const headingId = sectionHeadingId(title);
+
   return (
-    <section aria-labelledby={`section-${title.toLowerCase()}`} className="flex flex-col gap-1">
+    <section aria-labelledby={headingId} className="flex flex-col gap-1">
       <header className="flex items-center justify-between px-3 pt-2 pb-1">
         <h3
           className="text-xs font-semibold uppercase tracking-wider text-text-muted"
-          id={`section-${title.toLowerCase()}`}
+          id={headingId}
         >
           {title}
         </h3>

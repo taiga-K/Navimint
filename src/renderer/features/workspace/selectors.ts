@@ -1,10 +1,4 @@
-import type {
-  ScreenDefinition,
-  ScreensDocument,
-  ScreenTransition,
-  WorkspaceDerived,
-  WorkspaceState,
-} from '@shared/types';
+import type { ScreenDefinition, ScreenTransition, WorkspaceDerived, WorkspaceState } from '@shared/types';
 
 const EMPTY_DERIVED: WorkspaceDerived = {
   screenById: {},
@@ -39,13 +33,13 @@ export function deriveWorkspace(state: WorkspaceState): WorkspaceDerived {
 }
 
 export function selectSelectedScreen(
-  document: ScreensDocument | null,
+  screenById: Record<string, ScreenDefinition>,
   selectedScreenId: string | null,
 ): ScreenDefinition | null {
-  if (document === null || selectedScreenId === null) {
+  if (selectedScreenId === null) {
     return null;
   }
-  return document.screens.find((screen) => screen.id === selectedScreenId) ?? null;
+  return screenById[selectedScreenId] ?? null;
 }
 
 function buildScreenById(screens: readonly ScreenDefinition[]): Record<string, ScreenDefinition> {

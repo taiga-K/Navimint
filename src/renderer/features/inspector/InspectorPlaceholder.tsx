@@ -2,8 +2,8 @@ import { selectSelectedScreen } from '../workspace/selectors';
 import { useWorkspace } from '../workspace/use-workspace';
 
 export function InspectorPlaceholder() {
-  const { state } = useWorkspace();
-  const screen = selectSelectedScreen(state.document, state.selectedScreenId);
+  const { state, derived } = useWorkspace();
+  const screen = selectSelectedScreen(derived.screenById, state.selectedScreenId);
 
   if (screen === null) {
     return (

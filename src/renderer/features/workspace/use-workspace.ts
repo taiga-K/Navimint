@@ -56,69 +56,72 @@ export function useWorkspaceSync(): void {
 
   useEffect(() => {
     let active = true;
-    let loadGeneration = 0;
+    let loadSeq = 0;
 
-    const startDocumentLoad = (): void => {
-      loadGeneration += 1;
-      const generation = loadGeneration;
-      void (async () => {
-        dispatch({ type: 'load-started' });
-        try {
-          const result = await window.navimint.loadScreensDocument();
-          if (generation !== loadGeneration) {
-            return;
-          }
-          if (result.ok) {
-            dispatch({ type: 'document-loaded', document: result.document });
-            return;
-          }
-          dispatch({
-            type: 'document-load-failed',
-            failure: {
-              reason: result.reason,
-              message: result.message,
-              filePath: result.filePath,
-            },
-          });
-        } catch (error) {
-          if (generation !== loadGeneration) {
-            return;
-          }
-          dispatch({
-            type: 'document-load-failed',
-            failure: {
-              reason: 'unexpected-error',
-              message: error instanceof Error ? error.message : String(error),
-              filePath: null,
-            },
-          });
+    async function runLoad(): Promise<void> {
+      const seq = ++loadSeq;
+      dispatch({ type: 'load-started' });
+      try {
+        const result = await window.navimint.loadScreensDocument();
+        if (!active || seq !== loadSeq) {
+          return;
         }
-      })();
-    };
-
-    let unsubscribe: (() => void) | null = null;
+        if (result.ok) {
+          dispatch({ type: 'document-loaded', document: result.document });
+          return;
+        }
+        dispatch({
+          type: 'document-load-failed',
+          failure: {
+            reason: result.reason,
+            message: result.message,
+            filePath: result.filePath,
+          },
+        });
+      } catch (error) {
+        if (!active || seq !== loadSeq) {
+          return;
+        }
+        dispatch({
+          type: 'document-load-failed',
+          failure: {
+            reason: 'unexpected-error',
+            message: error instanceof Error ? error.message : String(error),
+            filePath: null,
+          },
+        });
+      }
+    }
 
     void (async () => {
-      const projectRoot = await window.navimint.getProjectRoot();
+      try {
+        const projectRoot = await window.navimint.getProjectRoot();
+        if (!active) {
+          return;
+        }
+        dispatch({ type: 'project-root-changed', projectRoot });
+      } catch (error) {
+        console.error('[workspace] getProjectRoot failed', error);
+        if (!active) {
+          return;
+        }
+        dispatch({ type: 'project-root-changed', projectRoot: null });
+      }
       if (!active) {
         return;
       }
-      dispatch({ type: 'project-root-changed', projectRoot });
-      startDocumentLoad();
-
-      if (!active) {
-        return;
-      }
-      unsubscribe = window.navimint.onProjectRootChanged((nextRoot) => {
-        dispatch({ type: 'project-root-changed', projectRoot: nextRoot });
-        startDocumentLoad();
-      });
+      await runLoad();
     })();
+
+    const unsubscribe = window.navimint.onProjectRootChanged((projectRoot) => {
+      dispatch({ type: 'project-root-changed', projectRoot });
+      void runLoad();
+    });
 
     return () => {
       active = false;
-      loadGeneration += 1;
-      unsubscribe?.();
+      loadSeq += 1;
+      unsubscribe();
     };
   }, [dispatch]);
 }
@@ -130,7 +133,8 @@ export function useWorkspaceSync(): void {
  */
 export function useOpenProjectFolder(): () => void {
   return useCallback(() => {
-    void window.navimint.openProjectDialog();
+    void window.navimint.openProjectDialog().catch((error) => {
+      console.error('[workspace] openProjectDialog failed', error);
+    });
   }, []);
 }
-
