@@ -15,7 +15,15 @@ export function createMainWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      /**
+       * Electron's sandboxed preload can only `require` a whitelisted set of
+       * built-in modules — not our compiled `../shared/...` chunks. The preload
+       * would fail before `contextBridge.exposeInMainWorld`, so `window.navimint`
+       * stayed undefined. Disabling the renderer sandbox keeps full preload
+       * `require` while the renderer still has no Node (nodeIntegration: false).
+       * @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
+       */
+      sandbox: false,
     },
   });
 

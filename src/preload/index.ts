@@ -4,11 +4,10 @@ import { NAVIMINT_BRIDGE_KEY, type NavimintBridge } from '../shared/preload/api'
 import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
 
 /*
- * The renderer runs this file with `sandbox: true`, so the polyfilled
- * `require()` only resolves the whitelisted modules (`electron`, `events`,
- * `timers`, `url`). Values imported from `../shared/...` compile to relative
- * `require()` calls against emitted JS under `dist/`, so IPC channel strings
- * stay aligned with main via `IPC_CHANNELS` in `src/shared/types/ipc.ts`.
+ * `BrowserWindow` uses `sandbox: false` so this preload can `require()` the
+ * compiled `../shared/...` modules. Sandboxed preloads may not load arbitrary
+ * CommonJS chunks (Electron doc: preload splitting needs a bundler).
+ * Channel strings stay aligned with main via `IPC_CHANNELS` in `src/shared/types/ipc.ts`.
  */
 
 const bridge: NavimintBridge = {
