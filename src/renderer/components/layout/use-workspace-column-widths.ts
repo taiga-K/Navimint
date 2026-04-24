@@ -1,4 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type Dispatch,
+  type MutableRefObject,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 const STORAGE_KEY = 'navimint.workspaceColumnWidths';
 const DEFAULT_LEFT = 272;
@@ -47,11 +57,98 @@ function clampWidthsForMain(widths: Widths, mainWidth: number): Widths {
   if (left + right <= max) {
     return { left, right };
   }
+  const minSum = MIN_LEFT + MIN_RIGHT;
+  if (max < minSum) {
+    const wL = MIN_LEFT / minSum;
+    return { left: max * wL, right: max * (1 - wL) };
+  }
   const s = max / (left + right);
-  return {
-    left: Math.max(MIN_LEFT, left * s),
-    right: Math.max(MIN_RIGHT, right * s),
+  const sl = left * s;
+  const sr = right * s;
+  if (sl >= MIN_LEFT && sr >= MIN_RIGHT) {
+    return { left: sl, right: sr };
+  }
+  if (sl < MIN_LEFT) {
+    const nl = MIN_LEFT;
+    const nr = Math.max(MIN_RIGHT, max - nl);
+    return { left: nl, right: nr };
+  }
+  const nr = MIN_RIGHT;
+  const nl = Math.max(MIN_LEFT, max - nr);
+  return { left: nl, right: nr };
+}
+
+function startWorkspaceGutterDrag(
+  side: 'left' | 'right',
+  e: ReactPointerEvent<HTMLDivElement>,
+  widthsRef: MutableRefObject<Widths>,
+  mainRef: RefObject<HTMLDivElement | null>,
+  setWidths: Dispatch<SetStateAction<Widths>>,
+  setResizing: Dispatch<SetStateAction<'left' | 'right' | null>>,
+): void {
+  e.preventDefault();
+  const target = e.currentTarget;
+  const pointerId = e.pointerId;
+  const startX = e.clientX;
+  const startLeft = widthsRef.current.left;
+  const startRight = widthsRef.current.right;
+  const mw = mainRef.current?.getBoundingClientRect().width ?? 0;
+  if (mw <= 0) {
+    return;
+  }
+  target.setPointerCapture(pointerId);
+  setResizing(side);
+  const prevUserSelect = document.body.style.userSelect;
+  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize';
+
+  const onMove = (ev: PointerEvent) => {
+    if (ev.pointerId !== pointerId) {
+      return;
+    }
+    const wMain = mainRef.current?.getBoundingClientRect().width ?? mw;
+    const g = 2 * GUTTER_PX;
+    const deltaRaw = ev.clientX - startX;
+    const primaryDelta = side === 'left' ? deltaRaw : -deltaRaw;
+    let nextLeft: number;
+    let nextRight: number;
+    if (side === 'left') {
+      const capPrimary = wMain - g - MIN_RIGHT - MIN_CENTER;
+      nextLeft = Math.max(MIN_LEFT, Math.min(capPrimary, startLeft + primaryDelta));
+      const maxSpaceForRight = wMain - g - nextLeft - MIN_CENTER;
+      nextRight = Math.max(MIN_RIGHT, Math.min(startRight, maxSpaceForRight));
+    } else {
+      const capPrimary = wMain - g - MIN_LEFT - MIN_CENTER;
+      nextRight = Math.max(MIN_RIGHT, Math.min(capPrimary, startRight + primaryDelta));
+      const maxSpaceForLeft = wMain - g - nextRight - MIN_CENTER;
+      nextLeft = Math.max(MIN_LEFT, Math.min(startLeft, maxSpaceForLeft));
+    }
+    setWidths((prev) => {
+      if (nextLeft === prev.left && nextRight === prev.right) {
+        return prev;
+      }
+      return { left: nextLeft, right: nextRight };
+    });
   };
+
+  const onUp = (ev: PointerEvent) => {
+    if (ev.pointerId !== pointerId) {
+      return;
+    }
+    target.removeEventListener('pointermove', onMove);
+    target.removeEventListener('pointerup', onUp);
+    target.removeEventListener('pointercancel', onUp);
+    if (target.hasPointerCapture(pointerId)) {
+      target.releasePointerCapture(pointerId);
+    }
+    document.body.style.userSelect = prevUserSelect;
+    document.body.style.cursor = '';
+    setResizing(null);
+  };
+
+  target.addEventListener('pointermove', onMove);
+  target.addEventListener('pointerup', onUp);
+  target.addEventListener('pointercancel', onUp);
 }
 
 export function useWorkspaceColumnWidths() {
@@ -106,117 +203,19 @@ export function useWorkspaceColumnWidths() {
     }
   }, [widths]);
 
-  const onLeftGutterPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const target = e.currentTarget;
-    const pointerId = e.pointerId;
-    const startX = e.clientX;
-    const startLeft = widthsRef.current.left;
-    const startRight = widthsRef.current.right;
-    const mw = mainRef.current?.getBoundingClientRect().width ?? 0;
-    if (mw <= 0) {
-      return;
-    }
-    target.setPointerCapture(pointerId);
-    setResizing('left');
-    const prevUserSelect = document.body.style.userSelect;
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
+  const onLeftGutterPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      startWorkspaceGutterDrag('left', e, widthsRef, mainRef, setWidths, setResizing);
+    },
+    [],
+  );
 
-    const onMove = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) {
-        return;
-      }
-      const wMain = mainRef.current?.getBoundingClientRect().width ?? mw;
-      const g = 2 * GUTTER_PX;
-      const delta = ev.clientX - startX;
-      const capLeft = wMain - g - MIN_RIGHT - MIN_CENTER;
-      const nextLeft = Math.max(MIN_LEFT, Math.min(capLeft, startLeft + delta));
-      const maxSpaceForRight = wMain - g - nextLeft - MIN_CENTER;
-      const nextRight = Math.max(MIN_RIGHT, Math.min(startRight, maxSpaceForRight));
-      setWidths((prev) => {
-        if (nextLeft === prev.left && nextRight === prev.right) {
-          return prev;
-        }
-        return { left: nextLeft, right: nextRight };
-      });
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) {
-        return;
-      }
-      target.removeEventListener('pointermove', onMove);
-      target.removeEventListener('pointerup', onUp);
-      target.removeEventListener('pointercancel', onUp);
-      if (target.hasPointerCapture(pointerId)) {
-        target.releasePointerCapture(pointerId);
-      }
-      document.body.style.userSelect = prevUserSelect;
-      document.body.style.cursor = '';
-      setResizing(null);
-    };
-
-    target.addEventListener('pointermove', onMove);
-    target.addEventListener('pointerup', onUp);
-    target.addEventListener('pointercancel', onUp);
-  }, []);
-
-  const onRightGutterPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const target = e.currentTarget;
-    const pointerId = e.pointerId;
-    const startX = e.clientX;
-    const startLeft = widthsRef.current.left;
-    const startRight = widthsRef.current.right;
-    const mw = mainRef.current?.getBoundingClientRect().width ?? 0;
-    if (mw <= 0) {
-      return;
-    }
-    target.setPointerCapture(pointerId);
-    setResizing('right');
-    const prevUserSelect = document.body.style.userSelect;
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'col-resize';
-
-    const onMove = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) {
-        return;
-      }
-      const wMain = mainRef.current?.getBoundingClientRect().width ?? mw;
-      const g = 2 * GUTTER_PX;
-      const delta = ev.clientX - startX;
-      const capRight = wMain - g - MIN_LEFT - MIN_CENTER;
-      const nextRight = Math.max(MIN_RIGHT, Math.min(capRight, startRight - delta));
-      const maxSpaceForLeft = wMain - g - nextRight - MIN_CENTER;
-      const nextLeft = Math.max(MIN_LEFT, Math.min(startLeft, maxSpaceForLeft));
-      setWidths((prev) => {
-        if (nextLeft === prev.left && nextRight === prev.right) {
-          return prev;
-        }
-        return { left: nextLeft, right: nextRight };
-      });
-    };
-
-    const onUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== pointerId) {
-        return;
-      }
-      target.removeEventListener('pointermove', onMove);
-      target.removeEventListener('pointerup', onUp);
-      target.removeEventListener('pointercancel', onUp);
-      if (target.hasPointerCapture(pointerId)) {
-        target.releasePointerCapture(pointerId);
-      }
-      document.body.style.userSelect = prevUserSelect;
-      document.body.style.cursor = '';
-      setResizing(null);
-    };
-
-    target.addEventListener('pointermove', onMove);
-    target.addEventListener('pointerup', onUp);
-    target.addEventListener('pointercancel', onUp);
-  }, []);
+  const onRightGutterPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLDivElement>) => {
+      startWorkspaceGutterDrag('right', e, widthsRef, mainRef, setWidths, setResizing);
+    },
+    [],
+  );
 
   return {
     mainRef,
