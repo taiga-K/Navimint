@@ -13,4 +13,9 @@ export type {
   ScreenTransition,
 } from './screens';
 export { SCREENS_DOCUMENT_VERSION } from './screens';
-export type { WorkspaceDerived, WorkspaceLoadState, WorkspaceState } from './workspace';
+export type {
+  WorkspaceDerived,
+  WorkspaceLoadFailure,
+  WorkspaceLoadState,
+  WorkspaceState,
+} from './workspace';

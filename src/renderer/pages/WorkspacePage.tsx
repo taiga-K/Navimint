@@ -3,10 +3,10 @@ import { GraphPlaceholder } from '../features/graph/GraphPlaceholder';
 import { InspectorPlaceholder } from '../features/inspector/InspectorPlaceholder';
 import { ScreensSidebar } from '../features/sidebar/components/ScreensSidebar';
 import { selectSelectedScreen } from '../features/workspace/selectors';
-import { useLoadScreensOnMount, useWorkspace } from '../features/workspace/use-workspace';
+import { useWorkspace, useWorkspaceSync } from '../features/workspace/use-workspace';
 
 export function WorkspacePage() {
-  useLoadScreensOnMount();
+  useWorkspaceSync();
 
   return (
     <WorkspaceLayout
@@ -23,18 +23,28 @@ function StatusBar() {
   const total = state.document?.screens.length ?? 0;
   const orphans = derived.orphanScreenIds.length;
   const selectedScreen = selectSelectedScreen(state.document, state.selectedScreenId);
+  const projectLabel = state.document?.project.name ?? state.projectRoot;
 
   if (state.loadState === 'loading' || state.loadState === 'idle') {
-    return <span>Loading screens.json...</span>;
+    return <span className="truncate">Loading screens.json...</span>;
   }
   if (state.loadState === 'error') {
-    return <span className="text-accent-danger">screens.json could not be loaded</span>;
+    if (state.loadFailure?.reason === 'no-project-root') {
+      return <span className="truncate">No project folder open. Use File &gt; Open Folder.</span>;
+    }
+    return <span className="truncate text-accent-danger">screens.json could not be loaded</span>;
   }
   if (total === 0) {
-    return <span>No screens defined</span>;
+    return <span className="truncate">No screens defined</span>;
   }
   return (
     <span className="flex w-full items-center gap-3 truncate">
+      {projectLabel === null ? null : (
+        <>
+          <span className="truncate text-text-primary">{projectLabel}</span>
+          <span aria-hidden="true">·</span>
+        </>
+      )}
       <span>{total} screens</span>
       <span aria-hidden="true">·</span>
       <span>{orphans} orphan</span>

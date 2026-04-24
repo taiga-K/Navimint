@@ -24,4 +24,8 @@ export type LoadScreensResult = LoadScreensSuccess | LoadScreensFailure;
 
 export const IPC_CHANNELS = {
   loadScreensDocument: 'navimint:screens:load',
+  getProjectRoot: 'navimint:project:get-root',
+  openProjectDialog: 'navimint:project:open-dialog',
+  /** Push event from main: emitted whenever the active project root changes. */
+  projectRootChanged: 'navimint:project:root-changed',
 } as const;

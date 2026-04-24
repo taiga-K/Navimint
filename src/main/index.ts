@@ -2,20 +2,16 @@ import path from 'node:path';
 
 import { app, BrowserWindow } from 'electron';
 
+import { IPC_CHANNELS } from '../shared/types';
+import { showOpenProjectDialog } from './dialogs/open-project-dialog';
+import { registerProjectIpc } from './ipc/project';
 import { registerScreensIpc } from './ipc/screens';
+import { installAppMenu } from './menu';
+import { getProjectRoot, onProjectRootChanged, setProjectRoot } from './project-root';
 import { createMainWindow } from './window';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
-
-/** Resolved from `NAVIMINT_PROJECT_ROOT`, falling back to `process.cwd()`. */
-function resolveProjectRoot(): string | null {
-  const fromEnv = process.env.NAVIMINT_PROJECT_ROOT;
-  if (fromEnv && fromEnv.length > 0) {
-    return path.resolve(fromEnv);
-  }
-  return process.cwd();
-}
 
 async function loadRenderer(window: BrowserWindow): Promise<void> {
   if (isDev) {
@@ -26,8 +22,28 @@ async function loadRenderer(window: BrowserWindow): Promise<void> {
   await window.loadFile(path.join(__dirname, '../renderer/index.html'));
 }
 
+async function handleOpenProject(): Promise<void> {
+  const next = await showOpenProjectDialog(mainWindow);
+  if (next !== null) {
+    setProjectRoot(next);
+  }
+}
+
+function broadcastProjectRoot(projectRoot: string | null): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(IPC_CHANNELS.projectRootChanged, projectRoot);
+  }
+}
+
 async function bootstrap(): Promise<void> {
-  registerScreensIpc({ getProjectRoot: resolveProjectRoot });
+  registerScreensIpc({ getProjectRoot });
+  registerProjectIpc();
+  installAppMenu({
+    onOpenProject: () => {
+      void handleOpenProject();
+    },
+  });
+  onProjectRootChanged(broadcastProjectRoot);
   mainWindow = createMainWindow();
   await loadRenderer(mainWindow);
 }

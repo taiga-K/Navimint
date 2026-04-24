@@ -4,6 +4,7 @@ import {
   createElement,
   type Dispatch,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -43,26 +44,73 @@ export function useWorkspace(): WorkspaceContextValue {
   return value;
 }
 
-/** Loads `screens.json` once when the workspace mounts. */
-export function useLoadScreensOnMount(): void {
+/**
+ * Wires the workspace state to the main process:
+ *
+ * - On mount, fetch the current project root and load `screens.json`.
+ * - Subscribe to `projectRootChanged` events so menu-driven folder switches
+ *   automatically refresh the document.
+ */
+export function useWorkspaceSync(): void {
   const { dispatch } = useWorkspace();
 
   useEffect(() => {
-    let cancelled = false;
-    dispatch({ type: 'load-started' });
+    let active = true;
+
     void (async () => {
-      const result = await window.navimint.loadScreensDocument();
-      if (cancelled) {
+      const projectRoot = await window.navimint.getProjectRoot();
+      if (!active) {
         return;
       }
-      if (result.ok) {
-        dispatch({ type: 'document-loaded', document: result.document });
-        return;
-      }
-      dispatch({ type: 'document-load-failed' });
+      dispatch({ type: 'project-root-changed', projectRoot });
+      await loadAndDispatch(dispatch);
     })();
+
+    const unsubscribe = window.navimint.onProjectRootChanged((projectRoot) => {
+      dispatch({ type: 'project-root-changed', projectRoot });
+      void loadAndDispatch(dispatch);
+    });
+
     return () => {
-      cancelled = true;
+      active = false;
+      unsubscribe();
     };
   }, [dispatch]);
+}
+
+/** Imperative trigger for the renderer-side "Open Folder" affordance. */
+export function useOpenProjectFolder(): () => Promise<void> {
+  return useCallback(async () => {
+    await window.navimint.openProjectDialog();
+    // The main process broadcasts `projectRootChanged`, which `useWorkspaceSync`
+    // turns into a reload. No additional dispatch is required here.
+  }, []);
+}
+
+async function loadAndDispatch(dispatch: Dispatch<WorkspaceAction>): Promise<void> {
+  dispatch({ type: 'load-started' });
+  try {
+    const result = await window.navimint.loadScreensDocument();
+    if (result.ok) {
+      dispatch({ type: 'document-loaded', document: result.document });
+      return;
+    }
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: result.reason,
+        message: result.message,
+        filePath: result.filePath,
+      },
+    });
+  } catch (error) {
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: 'unexpected-error',
+        message: error instanceof Error ? error.message : String(error),
+        filePath: null,
+      },
+    });
+  }
 }

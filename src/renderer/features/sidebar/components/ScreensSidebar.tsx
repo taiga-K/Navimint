@@ -1,7 +1,11 @@
-import type { ScreenDefinition, WorkspaceLoadState } from '@shared/types';
+import type {
+  ScreenDefinition,
+  WorkspaceLoadFailure,
+  WorkspaceLoadState,
+} from '@shared/types';
 import { type ReactNode, useCallback, useMemo } from 'react';
 
-import { useWorkspace } from '../../workspace/use-workspace';
+import { useOpenProjectFolder, useWorkspace } from '../../workspace/use-workspace';
 import { ScreenSection } from './ScreenSection';
 import { ScreensSearchInput } from './ScreensSearchInput';
 
@@ -10,6 +14,7 @@ const ORPHAN_SECTION = 'Orphan';
 
 export function ScreensSidebar() {
   const { state, derived, dispatch } = useWorkspace();
+  const openProjectFolder = useOpenProjectFolder();
 
   const handleSearchChange = useCallback(
     (next: string) => {
@@ -23,6 +28,9 @@ export function ScreensSidebar() {
     },
     [dispatch],
   );
+  const handleOpenFolder = useCallback(() => {
+    void openProjectFolder();
+  }, [openProjectFolder]);
 
   const connectedScreens = useMemo(
     () => mapToScreens(derived.filteredConnectedScreenIds, derived.screenById),
@@ -35,13 +43,15 @@ export function ScreensSidebar() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <SidebarHeader>
+      <SidebarHeader projectRoot={state.projectRoot} onOpenFolder={handleOpenFolder}>
         <ScreensSearchInput onChange={handleSearchChange} value={state.searchQuery} />
       </SidebarHeader>
       <div className="min-h-0 flex-1 overflow-y-auto py-1">
         <SidebarBody
           connectedScreens={connectedScreens}
+          loadFailure={state.loadFailure}
           loadState={state.loadState}
+          onOpenFolder={handleOpenFolder}
           onSelect={handleSelectScreen}
           orphanScreens={orphanScreens}
           searchQuery={state.searchQuery}
@@ -60,14 +70,34 @@ export function ScreensSidebar() {
   );
 }
 
-function SidebarHeader({ children }: { children: ReactNode }) {
+interface SidebarHeaderProps {
+  children: ReactNode;
+  projectRoot: string | null;
+  onOpenFolder: () => void;
+}
+
+function SidebarHeader({ children, projectRoot, onOpenFolder }: SidebarHeaderProps) {
   return (
     <header className="flex flex-col gap-2 border-b border-border-strong px-3 py-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+      <div className="flex items-center justify-between gap-2">
+        <span className="truncate text-xs font-semibold uppercase tracking-wider text-text-muted">
           Screens
         </span>
+        <button
+          aria-label="Open project folder"
+          className="cursor-pointer rounded-md border border-border-strong bg-elevated px-2 py-1 text-xs text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus"
+          onClick={onOpenFolder}
+          title="Open Folder (⌘O)"
+          type="button"
+        >
+          Open Folder
+        </button>
       </div>
+      {projectRoot === null ? null : (
+        <code className="truncate font-mono text-xs text-text-muted" title={projectRoot}>
+          {projectRoot}
+        </code>
+      )}
       {children}
     </header>
   );
@@ -82,6 +112,8 @@ interface SidebarBodyProps {
   selectedScreenId: string | null;
   searchQuery: string;
   loadState: WorkspaceLoadState;
+  loadFailure: WorkspaceLoadFailure | null;
+  onOpenFolder: () => void;
   onSelect: (screenId: string) => void;
 }
 
@@ -94,20 +126,16 @@ function SidebarBody({
   selectedScreenId,
   searchQuery,
   loadState,
+  loadFailure,
+  onOpenFolder,
   onSelect,
 }: SidebarBodyProps) {
   if (loadState === 'loading' || loadState === 'idle') {
-    return (
-      <p className="px-3 py-6 text-sm text-text-muted">Loading screens...</p>
-    );
+    return <p className="px-3 py-6 text-sm text-text-muted">Loading screens...</p>;
   }
 
   if (loadState === 'error') {
-    return (
-      <p className="px-3 py-6 text-sm text-accent-danger">
-        Failed to load screens.json. Check the project root and try again.
-      </p>
-    );
+    return <ErrorState failure={loadFailure} onOpenFolder={onOpenFolder} />;
   }
 
   if (totalScreens === 0) {
@@ -150,6 +178,51 @@ function SidebarBody({
       />
     </div>
   );
+}
+
+interface ErrorStateProps {
+  failure: WorkspaceLoadFailure | null;
+  onOpenFolder: () => void;
+}
+
+function ErrorState({ failure, onOpenFolder }: ErrorStateProps) {
+  const reason = failure?.reason;
+  const isMissingProject = reason === 'no-project-root';
+  const isMissingFile = reason === 'file-not-found';
+  const tone = isMissingProject || isMissingFile ? 'text-text-muted' : 'text-accent-danger';
+
+  return (
+    <div className="flex flex-col gap-3 px-3 py-6">
+      <p className={`text-sm ${tone}`}>{describeFailure(failure)}</p>
+      {isMissingProject || isMissingFile ? (
+        <button
+          className="self-start cursor-pointer rounded-md border border-border-strong bg-elevated px-3 py-1.5 text-xs text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus"
+          onClick={onOpenFolder}
+          type="button"
+        >
+          Open Folder...
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+function describeFailure(failure: WorkspaceLoadFailure | null): string {
+  if (failure === null) {
+    return 'Failed to load screens.json.';
+  }
+  switch (failure.reason) {
+    case 'no-project-root':
+      return 'No project folder is open. Use File > Open Folder (⌘O) to choose one.';
+    case 'file-not-found':
+      return 'screens.json was not found in the selected project root.';
+    case 'invalid-json':
+      return 'screens.json is not valid JSON.';
+    case 'invalid-shape':
+      return `screens.json has an unexpected shape: ${failure.message}`;
+    case 'unexpected-error':
+      return `Failed to load screens.json: ${failure.message}`;
+  }
 }
 
 interface SidebarFooterProps {
