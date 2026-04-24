@@ -96,6 +96,8 @@ export function useWorkspaceSync(): void {
       })();
     };
 
+    let unsubscribe: (() => void) | null = null;
+
     void (async () => {
       const projectRoot = await window.navimint.getProjectRoot();
       if (!active) {
@@ -103,17 +105,20 @@ export function useWorkspaceSync(): void {
       }
       dispatch({ type: 'project-root-changed', projectRoot });
       startDocumentLoad();
-    })();
 
-    const unsubscribe = window.navimint.onProjectRootChanged((projectRoot) => {
-      dispatch({ type: 'project-root-changed', projectRoot });
-      startDocumentLoad();
-    });
+      if (!active) {
+        return;
+      }
+      unsubscribe = window.navimint.onProjectRootChanged((nextRoot) => {
+        dispatch({ type: 'project-root-changed', projectRoot: nextRoot });
+        startDocumentLoad();
+      });
+    })();
 
     return () => {
       active = false;
       loadGeneration += 1;
-      unsubscribe();
+      unsubscribe?.();
     };
   }, [dispatch]);
 }

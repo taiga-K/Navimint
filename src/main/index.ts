@@ -44,8 +44,14 @@ async function bootstrap(): Promise<void> {
     },
   });
   onProjectRootChanged(broadcastProjectRoot);
-  mainWindow = createMainWindow();
-  await loadRenderer(mainWindow);
+  const win = createMainWindow();
+  mainWindow = win;
+  win.once('closed', () => {
+    if (mainWindow === win) {
+      mainWindow = null;
+    }
+  });
+  await loadRenderer(win);
 }
 
 app.on('window-all-closed', () => {
