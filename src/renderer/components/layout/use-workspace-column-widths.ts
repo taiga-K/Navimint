@@ -6,6 +6,7 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -14,7 +15,8 @@ import {
 const STORAGE_KEY = 'navimint.workspaceColumnWidths';
 const DEFAULT_LEFT = 272;
 const DEFAULT_RIGHT = 360;
-const GUTTER_PX = 6;
+/** Tailwind `w-1.5` (0.375rem) with `html` 14px in global.css */
+const GUTTER_PX = 0.375 * 14;
 const MIN_LEFT = 200;
 const MIN_RIGHT = 200;
 const MIN_CENTER = 200;
@@ -79,6 +81,14 @@ function clampWidthsForMain(widths: Widths, mainWidth: number): Widths {
   return { left: nl, right: nr };
 }
 
+function persistColumnWidths(widths: Widths): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ left: widths.left, right: widths.right }));
+  } catch {
+    void 0;
+  }
+}
+
 function startWorkspaceGutterDrag(
   side: 'left' | 'right',
   e: ReactPointerEvent<HTMLDivElement>,
@@ -86,6 +96,7 @@ function startWorkspaceGutterDrag(
   mainRef: RefObject<HTMLDivElement | null>,
   setWidths: Dispatch<SetStateAction<Widths>>,
   setResizing: Dispatch<SetStateAction<'left' | 'right' | null>>,
+  dragWidthsForPersistRef: MutableRefObject<Widths | null>,
 ): void {
   e.preventDefault();
   const target = e.currentTarget;
@@ -93,6 +104,7 @@ function startWorkspaceGutterDrag(
   const startX = e.clientX;
   const startLeft = widthsRef.current.left;
   const startRight = widthsRef.current.right;
+  dragWidthsForPersistRef.current = { left: startLeft, right: startRight };
   const mw = mainRef.current?.getBoundingClientRect().width ?? 0;
   if (mw <= 0) {
     return;
@@ -124,6 +136,7 @@ function startWorkspaceGutterDrag(
       const maxSpaceForLeft = wMain - g - nextRight - MIN_CENTER;
       nextLeft = Math.max(MIN_LEFT, Math.min(startLeft, maxSpaceForLeft));
     }
+    dragWidthsForPersistRef.current = { left: nextLeft, right: nextRight };
     setWidths((prev) => {
       if (nextLeft === prev.left && nextRight === prev.right) {
         return prev;
@@ -145,6 +158,11 @@ function startWorkspaceGutterDrag(
     document.body.style.userSelect = prevUserSelect;
     document.body.style.cursor = '';
     setResizing(null);
+    const toPersist = dragWidthsForPersistRef.current;
+    dragWidthsForPersistRef.current = null;
+    if (toPersist !== null) {
+      persistColumnWidths(toPersist);
+    }
   };
 
   target.addEventListener('pointermove', onMove);
@@ -156,6 +174,7 @@ export function useWorkspaceColumnWidths() {
   const mainRef = useRef<HTMLDivElement | null>(null);
   const [preferredWidths, setPreferredWidths] = useState<Widths>(loadInitialWidths);
   const widthsRef = useRef<Widths>(preferredWidths);
+  const dragWidthsForPersistRef = useRef<Widths | null>(null);
   const [mainWidth, setMainWidth] = useState(0);
   const [resizing, setResizing] = useState<null | 'left' | 'right'>(null);
 
@@ -166,7 +185,7 @@ export function useWorkspaceColumnWidths() {
     return clampWidthsForMain(preferredWidths, mainWidth);
   }, [preferredWidths, mainWidth]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     widthsRef.current = displayWidths;
   }, [displayWidths]);
 
@@ -187,27 +206,32 @@ export function useWorkspaceColumnWidths() {
     };
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ left: preferredWidths.left, right: preferredWidths.right }),
-      );
-    } catch {
-      void 0;
-    }
-  }, [preferredWidths]);
-
   const onLeftGutterPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      startWorkspaceGutterDrag('left', e, widthsRef, mainRef, setPreferredWidths, setResizing);
+      startWorkspaceGutterDrag(
+        'left',
+        e,
+        widthsRef,
+        mainRef,
+        setPreferredWidths,
+        setResizing,
+        dragWidthsForPersistRef,
+      );
     },
     [],
   );
 
   const onRightGutterPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      startWorkspaceGutterDrag('right', e, widthsRef, mainRef, setPreferredWidths, setResizing);
+      startWorkspaceGutterDrag(
+        'right',
+        e,
+        widthsRef,
+        mainRef,
+        setPreferredWidths,
+        setResizing,
+        dragWidthsForPersistRef,
+      );
     },
     [],
   );
