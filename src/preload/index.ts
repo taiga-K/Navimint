@@ -1,23 +1,16 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import type { NavimintBridge } from '../shared/preload/api';
-import type { LoadScreensResult } from '../shared/types';
+import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
 
 /*
  * The renderer runs this file with `sandbox: true`, so the polyfilled
  * `require()` only resolves the whitelisted modules (`electron`, `events`,
- * `timers`, `url`). Importing relative TypeScript modules at runtime would
- * throw before `contextBridge.exposeInMainWorld` is called and leave
- * `window.navimint` undefined. The constants below are kept inline and MUST
- * stay in sync with `src/shared/preload/api.ts` and `src/shared/types/ipc.ts`.
+ * `timers`, `url`). Values imported from `../shared/...` compile to relative
+ * `require()` calls against emitted JS under `dist/`, so IPC channel strings
+ * stay aligned with main via `IPC_CHANNELS` in `src/shared/types/ipc.ts`.
  */
 const NAVIMINT_BRIDGE_KEY = 'navimint';
-const IPC_CHANNELS = {
-  loadScreensDocument: 'navimint:screens:load',
-  getProjectRoot: 'navimint:project:get-root',
-  openProjectDialog: 'navimint:project:open-dialog',
-  projectRootChanged: 'navimint:project:root-changed',
-} as const;
 
 const bridge: NavimintBridge = {
   loadScreensDocument: (): Promise<LoadScreensResult> =>
