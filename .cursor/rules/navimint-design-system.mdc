@@ -1,0 +1,23 @@
+---
+description: Navimint UI work must follow the design system master
+alwaysApply: true
+---
+
+# Navimint Design System
+
+UI の設計・実装・レビューを行うときは、必ず `design-system/navimint/MASTER.md` を
+デザインシステムの Source of Truth として参照する。
+
+## 基本ルール
+
+- 新しい UI を作る前に `design-system/navimint/MASTER.md` を読む
+- 配色、タイポグラフィ、余白、3 ペイン構成、hover / selected / focus の扱いは
+  `MASTER.md` に合わせる
+- VSCode / Cursor / Notion の方向性である「静かなダークワークスペース」を崩さない
+- ランディングページ風の大きすぎる余白、過剰なグラデーション、強い glow は避ける
+- `route`、`id`、URL など技術情報は mono で読み分けられるようにする
+
+## 実装時の補足
+
+- 具体的な画面ルールが必要な場合は `design-system/navimint/pages/` の override も確認する
+- `MASTER.md` と実装が矛盾する場合は、まず実装ではなくデザインシステムに照らして判断する
