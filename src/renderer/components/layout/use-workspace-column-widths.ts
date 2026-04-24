@@ -6,6 +6,7 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -153,14 +154,21 @@ function startWorkspaceGutterDrag(
 
 export function useWorkspaceColumnWidths() {
   const mainRef = useRef<HTMLDivElement | null>(null);
-  const [widths, setWidths] = useState<Widths>(loadInitialWidths);
-  const widthsRef = useRef<Widths>(widths);
-
-  useEffect(() => {
-    widthsRef.current = widths;
-  }, [widths]);
+  const [preferredWidths, setPreferredWidths] = useState<Widths>(loadInitialWidths);
+  const widthsRef = useRef<Widths>(preferredWidths);
   const [mainWidth, setMainWidth] = useState(0);
   const [resizing, setResizing] = useState<null | 'left' | 'right'>(null);
+
+  const displayWidths = useMemo(() => {
+    if (mainWidth === 0) {
+      return preferredWidths;
+    }
+    return clampWidthsForMain(preferredWidths, mainWidth);
+  }, [preferredWidths, mainWidth]);
+
+  useEffect(() => {
+    widthsRef.current = displayWidths;
+  }, [displayWidths]);
 
   useEffect(() => {
     const el = mainRef.current;
@@ -180,47 +188,34 @@ export function useWorkspaceColumnWidths() {
   }, []);
 
   useEffect(() => {
-    if (mainWidth === 0) {
-      return;
-    }
-    setWidths((w) => {
-      const next = clampWidthsForMain(w, mainWidth);
-      if (next.left === w.left && next.right === w.right) {
-        return w;
-      }
-      return next;
-    });
-  }, [mainWidth]);
-
-  useEffect(() => {
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ left: widths.left, right: widths.right }),
+        JSON.stringify({ left: preferredWidths.left, right: preferredWidths.right }),
       );
     } catch {
       void 0;
     }
-  }, [widths]);
+  }, [preferredWidths]);
 
   const onLeftGutterPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      startWorkspaceGutterDrag('left', e, widthsRef, mainRef, setWidths, setResizing);
+      startWorkspaceGutterDrag('left', e, widthsRef, mainRef, setPreferredWidths, setResizing);
     },
     [],
   );
 
   const onRightGutterPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
-      startWorkspaceGutterDrag('right', e, widthsRef, mainRef, setWidths, setResizing);
+      startWorkspaceGutterDrag('right', e, widthsRef, mainRef, setPreferredWidths, setResizing);
     },
     [],
   );
 
   return {
     mainRef,
-    leftWidthPx: widths.left,
-    rightWidthPx: widths.right,
+    leftWidthPx: displayWidths.left,
+    rightWidthPx: displayWidths.right,
     onLeftGutterPointerDown,
     onRightGutterPointerDown,
     activeResize: resizing,
