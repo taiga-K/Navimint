@@ -28,10 +28,6 @@ export function ScreensSidebar() {
     },
     [dispatch],
   );
-  const handleOpenFolder = useCallback(() => {
-    void openProjectFolder();
-  }, [openProjectFolder]);
-
   const connectedScreens = useMemo(
     () => mapToScreens(derived.filteredConnectedScreenIds, derived.screenById),
     [derived.filteredConnectedScreenIds, derived.screenById],
@@ -43,7 +39,7 @@ export function ScreensSidebar() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <SidebarHeader projectRoot={state.projectRoot} onOpenFolder={handleOpenFolder}>
+      <SidebarHeader projectRoot={state.projectRoot} onOpenFolder={openProjectFolder}>
         <ScreensSearchInput onChange={handleSearchChange} value={state.searchQuery} />
       </SidebarHeader>
       <div className="min-h-0 flex-1 overflow-y-auto py-1">
@@ -51,7 +47,7 @@ export function ScreensSidebar() {
           connectedScreens={connectedScreens}
           loadFailure={state.loadFailure}
           loadState={state.loadState}
-          onOpenFolder={handleOpenFolder}
+          onOpenFolder={openProjectFolder}
           onSelect={handleSelectScreen}
           orphanScreens={orphanScreens}
           searchQuery={state.searchQuery}
@@ -85,12 +81,12 @@ function SidebarHeader({ children, projectRoot, onOpenFolder }: SidebarHeaderPro
         </span>
         <button
           aria-label="Open project folder"
-          className="cursor-pointer rounded-md border border-border-strong bg-elevated px-2 py-1 text-xs text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus"
+          className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-elevated text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus"
           onClick={onOpenFolder}
           title="Open Folder (⌘O)"
           type="button"
         >
-          Open Folder
+          <FolderOpenIcon />
         </button>
       </div>
       {projectRoot === null ? null : (
@@ -260,4 +256,24 @@ function mapToScreens(
     }
   }
   return result;
+}
+
+function FolderOpenIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+      />
+    </svg>
+  );
 }
