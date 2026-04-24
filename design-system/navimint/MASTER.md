@@ -56,22 +56,31 @@ UI は派手さよりも、情報の可読性、選択状態の明快さ、長�
 
 ## 3. Color System
 
-`ui-ux-pro-max` の `Developer Tool / IDE` パレットを基点に、ワークスペース向けにレイヤーを再定義する。
+ワークスペースの配色は **ニュートラルなグレースケール** を基軸とする。  
+`main` `base` `assets` の 3 軸を起点に、UI の階層（背景 → 境界 → メタテキスト）を表現する。
+
+### Palette Anchors
+
+| Anchor | Hex | 役割 |
+|---|---|---|
+| `main` | `#121212` | アプリ全体の主背景 |
+| `base` | `#515151` | パネル間の主境界線 |
+| `assets` | `#919191` | ラベル / メタ / アイコンのトーン |
 
 ### Core Tokens
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--bg-app` | `#0F172A` | アプリ全体の背景 |
-| `--bg-panel` | `#111827` | サイドバー、詳細ペイン |
-| `--bg-panel-muted` | `#0B1220` | 左端ナビ、補助領域 |
-| `--bg-elevated` | `#1E293B` | ホバー、入力欄、選択候補 |
-| `--bg-selected` | `#172554` | 選択状態の面 |
-| `--border-subtle` | `#223049` | 通常境界 |
-| `--border-strong` | `#334155` | 区切り線、カード境界 |
-| `--text-primary` | `#F8FAFC` | 主テキスト |
-| `--text-secondary` | `#CBD5E1` | 補足説明 |
-| `--text-muted` | `#94A3B8` | ラベル、メタ情報 |
+| `--bg-app` | `#121212` | アプリ全体の背景（main） |
+| `--bg-panel` | `#1A1A1A` | サイドバー、詳細ペイン |
+| `--bg-panel-muted` | `#0A0A0A` | ステータスバー、補助領域 |
+| `--bg-elevated` | `#262626` | ホバー、入力欄、選択候補 |
+| `--bg-selected` | `#2F2F2F` | 選択状態の面 |
+| `--border-subtle` | `#2E2E2E` | 通常境界 |
+| `--border-strong` | `#515151` | パネル区切り、カード境界（base） |
+| `--text-primary` | `#F5F5F5` | 主テキスト |
+| `--text-secondary` | `#C8C8C8` | 補足説明 |
+| `--text-muted` | `#919191` | ラベル、メタ情報（assets） |
 | `--accent-primary` | `#60A5FA` | フォーカス、選択、リンク |
 | `--accent-success` | `#22C55E` | Preview 成功、実行状態 |
 | `--accent-warning` | `#F59E0B` | 注意 |
@@ -80,24 +89,27 @@ UI は派手さよりも、情報の可読性、選択状態の明快さ、長�
 
 ### Semantic Usage
 
+- **無彩色を基調にする:** 背景・境界・テキストは achromatic（グレースケール）に揃える
 - **常用アクセントは 1 色に絞る:** 基本は `--accent-primary`
-- **成功だけ緑を使う:** Preview 接続確認、生成成功など
+- **成功 / 警告 / エラーは accent 系を使い続ける:** これらの意味色はグレースケール化しない
 - **画面固有 color は補助扱い:** `screens.json` の `color` はノード識別にのみ使い、UI 全体のテーマ色にはしない
 - **境界線で構造を作る:** 背景差だけで区切らず、1px border を積極的に使う
 
 ### Light Mode Guidance
 
-Light mode を用意する場合でも、暗色系 UI の設計思想を維持する。
+Light mode を用意する場合も、ニュートラルな achromatic 軸を維持する。  
+`base` と `assets` はダーク / ライト共通で同じ値を使い、配色のアイデンティティを保つ。
 
 | Token | Hex |
 |---|---|
-| `--bg-app` | `#F8FAFC` |
+| `--bg-app` | `#FAFAFA` |
 | `--bg-panel` | `#FFFFFF` |
-| `--bg-elevated` | `#F1F5F9` |
-| `--border-subtle` | `#E2E8F0` |
-| `--text-primary` | `#0F172A` |
-| `--text-secondary` | `#334155` |
-| `--text-muted` | `#64748B` |
+| `--bg-elevated` | `#F0F0F0` |
+| `--border-subtle` | `#E0E0E0` |
+| `--border-strong` | `#515151` |
+| `--text-primary` | `#121212` |
+| `--text-secondary` | `#515151` |
+| `--text-muted` | `#919191` |
 | `--accent-primary` | `#2563EB` |
 
 ## 4. Typography
@@ -257,16 +269,16 @@ Light mode を用意する場合でも、暗色系 UI の設計思想を維持�
 ```css
 :root {
   color-scheme: dark;
-  --bg-app: #0f172a;
-  --bg-panel: #111827;
-  --bg-panel-muted: #0b1220;
-  --bg-elevated: #1e293b;
-  --bg-selected: #172554;
-  --border-subtle: #223049;
-  --border-strong: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --bg-app: #121212;
+  --bg-panel: #1a1a1a;
+  --bg-panel-muted: #0a0a0a;
+  --bg-elevated: #262626;
+  --bg-selected: #2f2f2f;
+  --border-subtle: #2e2e2e;
+  --border-strong: #515151;
+  --text-primary: #f5f5f5;
+  --text-secondary: #c8c8c8;
+  --text-muted: #919191;
   --accent-primary: #60a5fa;
   --accent-success: #22c55e;
   --accent-warning: #f59e0b;
