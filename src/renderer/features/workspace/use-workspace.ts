@@ -11,6 +11,7 @@ import {
   useReducer,
 } from 'react';
 
+import { getNavimintBridge } from '../../lib/navimint-bridge';
 import { deriveWorkspace } from './selectors';
 import { initialWorkspaceState, type WorkspaceAction, workspaceReducer } from './store';
 
@@ -55,6 +56,7 @@ export function useWorkspaceSync(): void {
   const { dispatch } = useWorkspace();
 
   useEffect(() => {
+    const navimint = getNavimintBridge();
     let active = true;
     let loadSeq = 0;
 
@@ -62,7 +64,7 @@ export function useWorkspaceSync(): void {
       const seq = ++loadSeq;
       dispatch({ type: 'load-started' });
       try {
-        const result = await window.navimint.loadScreensDocument();
+        const result = await navimint.loadScreensDocument();
         if (!active || seq !== loadSeq) {
           return;
         }
@@ -95,7 +97,7 @@ export function useWorkspaceSync(): void {
 
     void (async () => {
       try {
-        const projectRoot = await window.navimint.getProjectRoot();
+        const projectRoot = await navimint.getProjectRoot();
         if (!active) {
           return;
         }
@@ -113,7 +115,7 @@ export function useWorkspaceSync(): void {
       await runLoad();
     })();
 
-    const unsubscribe = window.navimint.onProjectRootChanged((projectRoot) => {
+    const unsubscribe = navimint.onProjectRootChanged((projectRoot) => {
       dispatch({ type: 'project-root-changed', projectRoot });
       void runLoad();
     });
@@ -133,7 +135,7 @@ export function useWorkspaceSync(): void {
  */
 export function useOpenProjectFolder(): () => void {
   return useCallback(() => {
-    void window.navimint.openProjectDialog().catch((error) => {
+    void getNavimintBridge().openProjectDialog().catch((error) => {
       console.error('[workspace] openProjectDialog failed', error);
     });
   }, []);
