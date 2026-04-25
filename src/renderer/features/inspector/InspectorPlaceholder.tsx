@@ -62,7 +62,7 @@ function ScreenHeader({ screen }: { screen: ScreenDefinition }) {
 
 function DetailsSection({ screen }: { screen: ScreenDefinition }) {
   return (
-    <InspectorSection className="shrink-0" title="Details">
+    <InspectorSection className="shrink-0" collapsible title="Details">
       <DetailBlock label="Name" value={screen.name} />
       <DetailBlock label="Route" mono value={screen.route} />
       <DetailBlock

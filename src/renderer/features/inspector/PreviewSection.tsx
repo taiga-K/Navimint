@@ -116,7 +116,9 @@ export function PreviewSection({
 
   return (
     <InspectorSection
-      className="h-[40%] min-h-[220px] max-h-[48%] shrink-0 gap-2 overflow-hidden border-t border-border-strong py-3 pb-0"
+      className="min-h-0 flex-1 gap-2 overflow-hidden border-t border-border-strong py-3 pb-0"
+      collapsedClassName="shrink-0 border-t border-border-strong py-3"
+      collapsible
       title="Preview"
     >
       <label className="flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-md border border-border-strong bg-panel-muted px-2.5 transition-colors duration-[120ms] focus-within:border-accent-primary focus-within:shadow-focus">
