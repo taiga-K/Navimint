@@ -1,3 +1,4 @@
+import '@xyflow/react/dist/style.css';
 import './styles/global.css';
 
 import { StrictMode } from 'react';
