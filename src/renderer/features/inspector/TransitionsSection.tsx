@@ -1,5 +1,6 @@
 import type { ScreenDefinition, ScreenTransition } from '@shared/types';
 
+import { cn } from '../../lib/cn';
 import { InspectorSection } from './InspectorSection';
 
 interface TransitionsSectionProps {
@@ -24,6 +25,7 @@ export function TransitionsSection({
         transitions={inboundTransitions}
       />
       <TransitionGroup
+        className="border-t border-border-subtle pt-3"
         direction="outbound"
         screenById={screenById}
         title="Outbound transitions"
@@ -38,14 +40,23 @@ interface TransitionGroupProps {
   direction: 'inbound' | 'outbound';
   transitions: readonly ScreenTransition[];
   screenById: Record<string, ScreenDefinition>;
+  className?: string;
 }
 
-function TransitionGroup({ title, direction, transitions, screenById }: TransitionGroupProps) {
+function TransitionGroup({
+  title,
+  direction,
+  transitions,
+  screenById,
+  className,
+}: TransitionGroupProps) {
   return (
-    <section className="flex flex-col gap-2.5">
+    <section className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-text-primary">{title}</h4>
-        <span className="font-mono text-sm text-text-secondary">{transitions.length}</span>
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+          {title}
+        </h4>
+        <span className="font-mono text-xs text-text-muted">{transitions.length}</span>
       </div>
       {transitions.length === 0 ? (
         <p className="text-xs text-text-muted">No transitions</p>

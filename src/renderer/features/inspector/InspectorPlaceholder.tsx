@@ -56,7 +56,6 @@ function ScreenHeader({ screen }: { screen: ScreenDefinition }) {
           {screen.name}
         </h2>
       </div>
-      <code className="mt-1 block truncate font-mono text-xs text-text-muted">{screen.route}</code>
     </header>
   );
 }
