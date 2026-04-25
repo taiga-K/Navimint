@@ -1,4 +1,4 @@
-import type { LoadScreensResult } from '../types';
+import type { LoadScreensResult, SavePreviewBaseUrlResult } from '../types';
 
 /**
  * API surface the preload script exposes to the renderer through
@@ -6,6 +6,8 @@ import type { LoadScreensResult } from '../types';
  */
 export interface NavimintBridge {
   loadScreensDocument(): Promise<LoadScreensResult>;
+  /** Persists `project.baseURL` in the active project's screens.json. */
+  savePreviewBaseUrl(baseUrl: string): Promise<SavePreviewBaseUrlResult>;
   /** Returns the project root currently held by the main process. */
   getProjectRoot(): Promise<string | null>;
   /**

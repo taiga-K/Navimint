@@ -7,6 +7,7 @@ import {
   ScreensDocumentShapeError,
   validateScreensDocument,
 } from './validate-screens-document';
+import { errorMessage, isErrnoException } from './value-guards';
 
 export interface ReadScreensDocumentOptions {
   projectRoot: string | null;
@@ -83,15 +84,4 @@ export async function readScreensDocument(
       filePath,
     };
   }
-}
-
-function isErrnoException(value: unknown): value is NodeJS.ErrnoException {
-  return value instanceof Error && typeof (value as NodeJS.ErrnoException).code === 'string';
-}
-
-function errorMessage(value: unknown): string {
-  if (value instanceof Error) {
-    return value.message;
-  }
-  return String(value);
 }

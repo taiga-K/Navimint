@@ -5,16 +5,13 @@ import {
   type ScreensProject,
   type ScreenTransition,
 } from '../../shared/types';
+import { isPlainObject } from './value-guards';
 
 export class ScreensDocumentShapeError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ScreensDocumentShapeError';
   }
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function expectString(value: unknown, field: string): string {

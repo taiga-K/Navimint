@@ -1,7 +1,11 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import { NAVIMINT_BRIDGE_KEY, type NavimintBridge } from '../shared/preload/api';
-import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
+import {
+  IPC_CHANNELS,
+  type LoadScreensResult,
+  type SavePreviewBaseUrlResult,
+} from '../shared/types';
 
 /*
  * `BrowserWindow` uses `sandbox: false` so this preload can `require()` the
@@ -13,6 +17,11 @@ import { IPC_CHANNELS, type LoadScreensResult } from '../shared/types';
 const bridge: NavimintBridge = {
   loadScreensDocument: (): Promise<LoadScreensResult> =>
     ipcRenderer.invoke(IPC_CHANNELS.loadScreensDocument) as Promise<LoadScreensResult>,
+  savePreviewBaseUrl: (baseUrl): Promise<SavePreviewBaseUrlResult> =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.savePreviewBaseUrl,
+      baseUrl,
+    ) as Promise<SavePreviewBaseUrlResult>,
   getProjectRoot: (): Promise<string | null> =>
     ipcRenderer.invoke(IPC_CHANNELS.getProjectRoot) as Promise<string | null>,
   openProjectDialog: (): Promise<string | null> =>

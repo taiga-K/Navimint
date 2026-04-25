@@ -3,6 +3,10 @@ export type {
   LoadScreensFailureReason,
   LoadScreensResult,
   LoadScreensSuccess,
+  SavePreviewBaseUrlFailure,
+  SavePreviewBaseUrlFailureReason,
+  SavePreviewBaseUrlResult,
+  SavePreviewBaseUrlSuccess,
 } from './ipc';
 export { IPC_CHANNELS } from './ipc';
 export type {
