@@ -30,6 +30,36 @@ export function InspectorSection({
     );
   }
 
+  return (
+    <CollapsibleSection
+      className={className}
+      collapsedClassName={collapsedClassName}
+      count={count}
+      defaultOpen={defaultOpen}
+      title={title}
+    >
+      {children}
+    </CollapsibleSection>
+  );
+}
+
+interface CollapsibleSectionProps {
+  title: string;
+  count: number | undefined;
+  className: string | undefined;
+  collapsedClassName: string | undefined;
+  defaultOpen: boolean;
+  children: ReactNode;
+}
+
+function CollapsibleSection({
+  title,
+  count,
+  className,
+  collapsedClassName,
+  defaultOpen,
+  children,
+}: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const sectionClassName = isOpen ? className : (collapsedClassName ?? 'shrink-0');
 
