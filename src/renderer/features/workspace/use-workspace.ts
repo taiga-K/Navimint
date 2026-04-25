@@ -15,6 +15,47 @@ import { getNavimintBridge } from '../../lib/navimint-bridge';
 import { deriveWorkspace } from './selectors';
 import { initialWorkspaceState, type WorkspaceAction, workspaceReducer } from './store';
 
+/**
+ * Loads `screens.json` from disk into workspace state (used on project change and manual refresh).
+ */
+export async function reloadWorkspaceScreensDocument(
+  dispatch: Dispatch<WorkspaceAction>,
+  options?: { shouldAbort?: () => boolean },
+): Promise<void> {
+  const navimint = getNavimintBridge();
+  dispatch({ type: 'load-started' });
+  try {
+    const result = await navimint.loadScreensDocument();
+    if (options?.shouldAbort?.()) {
+      return;
+    }
+    if (result.ok) {
+      dispatch({ type: 'document-loaded', document: result.document });
+      return;
+    }
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: result.reason,
+        message: result.message,
+        filePath: result.filePath,
+      },
+    });
+  } catch (error) {
+    if (options?.shouldAbort?.()) {
+      return;
+    }
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: 'unexpected-error',
+        message: error instanceof Error ? error.message : String(error),
+        filePath: null,
+      },
+    });
+  }
+}
+
 export interface WorkspaceContextValue {
   state: WorkspaceState;
   derived: WorkspaceDerived;
@@ -62,37 +103,9 @@ export function useWorkspaceSync(): void {
 
     async function runLoad(): Promise<void> {
       const seq = ++loadSeq;
-      dispatch({ type: 'load-started' });
-      try {
-        const result = await navimint.loadScreensDocument();
-        if (!active || seq !== loadSeq) {
-          return;
-        }
-        if (result.ok) {
-          dispatch({ type: 'document-loaded', document: result.document });
-          return;
-        }
-        dispatch({
-          type: 'document-load-failed',
-          failure: {
-            reason: result.reason,
-            message: result.message,
-            filePath: result.filePath,
-          },
-        });
-      } catch (error) {
-        if (!active || seq !== loadSeq) {
-          return;
-        }
-        dispatch({
-          type: 'document-load-failed',
-          failure: {
-            reason: 'unexpected-error',
-            message: error instanceof Error ? error.message : String(error),
-            filePath: null,
-          },
-        });
-      }
+      await reloadWorkspaceScreensDocument(dispatch, {
+        shouldAbort: () => !active || seq !== loadSeq,
+      });
     }
 
     void (async () => {
@@ -139,4 +152,12 @@ export function useOpenProjectFolder(): () => void {
       console.error('[workspace] openProjectDialog failed', error);
     });
   }, []);
+}
+
+/** Re-reads `screens.json` for the current project (e.g. after an external analysis step). */
+export function useReloadWorkspaceScreens(): () => void {
+  const { dispatch } = useWorkspace();
+  return useCallback(() => {
+    void reloadWorkspaceScreensDocument(dispatch);
+  }, [dispatch]);
 }

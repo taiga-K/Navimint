@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-
-import { useWorkspace } from '../../features/workspace/use-workspace';
+import { useReloadWorkspaceScreens, useWorkspace } from '../../features/workspace/use-workspace';
 import { cn } from '../../lib/cn';
 import { compactProjectLabel } from '../../lib/project-label';
 
@@ -11,26 +9,15 @@ interface WorkspaceHeaderProps {
   onNavigateSettings: () => void;
 }
 
-const ANALYSIS_FEEDBACK_MS = 1600;
-
 const ICON_BUTTON_CLASS =
   'inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-panel text-text-muted transition-colors duration-[120ms] hover:border-accent-primary hover:bg-elevated hover:text-text-primary focus:outline-none focus-visible:shadow-focus';
 
 export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHeaderProps) {
   const { state } = useWorkspace();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const reloadScreens = useReloadWorkspaceScreens();
   const hasProject = state.projectRoot !== null;
+  const isReloadingScreens = state.loadState === 'loading';
   const projectLabel = compactProjectLabel(state.document?.project.name ?? state.projectRoot);
-
-  useEffect(() => {
-    if (!isAnalyzing) {
-      return;
-    }
-    const timerId = window.setTimeout(() => {
-      setIsAnalyzing(false);
-    }, ANALYSIS_FEEDBACK_MS);
-    return () => window.clearTimeout(timerId);
-  }, [isAnalyzing]);
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border-strong bg-panel px-3 text-sm text-text-primary">
@@ -42,15 +29,15 @@ export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHea
 
       <div className="flex shrink-0 items-center gap-2">
         <button
-          aria-busy={isAnalyzing}
+          aria-busy={isReloadingScreens}
           className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border-strong bg-elevated px-3 text-xs font-semibold text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border-strong disabled:hover:text-text-secondary"
-          disabled={!hasProject || isAnalyzing}
-          onClick={() => setIsAnalyzing(true)}
-          title={hasProject ? 'Analyze UI' : 'Open a project folder first'}
+          disabled={!hasProject || isReloadingScreens}
+          onClick={reloadScreens}
+          title={hasProject ? 'Reload screens from screens.json' : 'Open a project folder first'}
           type="button"
         >
-          <ArrowPathIcon className={isAnalyzing ? 'animate-spin' : undefined} />
-          {isAnalyzing ? 'Analyzing...' : 'Analyze UI'}
+          <ArrowPathIcon className={isReloadingScreens ? 'animate-spin' : undefined} />
+          {isReloadingScreens ? 'Loading...' : 'Analyze UI'}
         </button>
         <button
           aria-label="Open settings"
