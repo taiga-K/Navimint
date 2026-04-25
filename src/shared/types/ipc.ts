@@ -22,8 +22,28 @@ export interface LoadScreensFailure {
 
 export type LoadScreensResult = LoadScreensSuccess | LoadScreensFailure;
 
+export type SavePreviewBaseUrlFailureReason = LoadScreensFailureReason | 'invalid-base-url';
+
+export interface SavePreviewBaseUrlSuccess {
+  ok: true;
+  document: ScreensDocument;
+  filePath: string;
+}
+
+export interface SavePreviewBaseUrlFailure {
+  ok: false;
+  reason: SavePreviewBaseUrlFailureReason;
+  message: string;
+  filePath: string | null;
+}
+
+export type SavePreviewBaseUrlResult =
+  | SavePreviewBaseUrlSuccess
+  | SavePreviewBaseUrlFailure;
+
 export const IPC_CHANNELS = {
   loadScreensDocument: 'navimint:screens:load',
+  savePreviewBaseUrl: 'navimint:screens:save-preview-base-url',
   getProjectRoot: 'navimint:project:get-root',
   openProjectDialog: 'navimint:project:open-dialog',
   /** Push event from main: emitted whenever the active project root changes. */
