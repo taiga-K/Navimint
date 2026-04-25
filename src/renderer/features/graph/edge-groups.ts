@@ -5,7 +5,7 @@ import type { GraphEdgeGroup, TransitionInput } from './graph-types';
 
 const GROUP_DELIMITER = '\u001f';
 
-export function stableGraphId(prefix: string, parts: readonly string[]): string {
+function stableGraphId(prefix: string, parts: readonly string[]): string {
   return `${prefix}:${hashParts(parts)}`;
 }
 

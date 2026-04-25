@@ -24,6 +24,7 @@ import {
   clearManualLayoutPositions,
   createEmptyPositions,
   hasManualLayoutPositions,
+  type ManualNodePositions,
   readManualLayoutPositions,
   upsertManualLayoutPositions,
   writeManualLayoutPositions,
@@ -54,9 +55,14 @@ const INITIAL_LAYOUT_STATE: GraphLayoutState = {
 export function ScreenFlowGraph() {
   const { state, dispatch } = useWorkspace();
   const layoutSeqRef = useRef(0);
+  const manualPositionsRef = useRef<ManualNodePositions>(createEmptyPositions());
   const [layoutState, setLayoutState] = useState<GraphLayoutState>(INITIAL_LAYOUT_STATE);
   const [manualPositions, setManualPositions] = useState(createEmptyPositions);
   const [flowElements, setFlowElements] = useState<LayoutedGraphElements | null>(null);
+
+  useEffect(() => {
+    manualPositionsRef.current = manualPositions;
+  }, [manualPositions]);
 
   const model = useMemo(() => {
     if (state.document === null) {
@@ -153,11 +159,10 @@ export function ScreenFlowGraph() {
   const handleNodeDragStop = useCallback<OnNodeDrag<ScreenFlowNode>>(
     (_event, node, nodes) => {
       const movedNodes = nodes.length > 0 ? nodes : [node];
-      setManualPositions((current) => {
-        const next = upsertManualLayoutPositions(current, movedNodes);
-        writeManualLayoutPositions(layoutStorageScope, getLocalStorage(), next);
-        return next;
-      });
+      const next = upsertManualLayoutPositions(manualPositionsRef.current, movedNodes);
+      manualPositionsRef.current = next;
+      setManualPositions(next);
+      writeManualLayoutPositions(layoutStorageScope, getLocalStorage(), next);
     },
     [layoutStorageScope],
   );
