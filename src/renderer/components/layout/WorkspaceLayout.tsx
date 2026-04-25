@@ -38,7 +38,7 @@ export function WorkspaceLayout({
   } = useWorkspaceColumnWidths();
 
   return (
-    <div className={cn('flex h-dvh w-dvw flex-col bg-app text-text-primary', className)}>
+    <div className={cn('flex h-full w-full flex-col bg-app text-text-primary', className)}>
       <main ref={mainRef} className="flex min-h-0 min-w-0 flex-1">
         <aside
           aria-label="Screens sidebar"

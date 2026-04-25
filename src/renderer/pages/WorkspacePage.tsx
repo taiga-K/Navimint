@@ -3,11 +3,10 @@ import { ScreenFlowGraph } from '../features/graph/ScreenFlowGraph';
 import { InspectorPlaceholder } from '../features/inspector/InspectorPlaceholder';
 import { ScreensSidebar } from '../features/sidebar/components/ScreensSidebar';
 import { selectSelectedScreen } from '../features/workspace/selectors';
-import { useWorkspace, useWorkspaceSync } from '../features/workspace/use-workspace';
+import { useWorkspace } from '../features/workspace/use-workspace';
+import { compactProjectLabel } from '../lib/project-label';
 
 export function WorkspacePage() {
-  useWorkspaceSync();
-
   return (
     <WorkspaceLayout
       graph={<ScreenFlowGraph />}
@@ -23,7 +22,7 @@ function StatusBar() {
   const total = state.document?.screens.length ?? 0;
   const orphans = derived.orphanScreenIds.length;
   const selectedScreen = selectSelectedScreen(derived.screenById, state.selectedScreenId);
-  const projectLabel = state.document?.project.name ?? state.projectRoot;
+  const projectLabel = compactProjectLabel(state.document?.project.name ?? state.projectRoot);
 
   if (state.loadState === 'loading' || state.loadState === 'idle') {
     return <span className="truncate">Loading screens.json...</span>;
