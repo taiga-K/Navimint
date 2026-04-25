@@ -212,7 +212,7 @@ function PreviewFrame({
           key={`${previewUrl.href}:${reloadNonce}`}
           onLoad={onLoad}
           referrerPolicy="no-referrer"
-          sandbox="allow-downloads allow-forms allow-same-origin allow-scripts"
+          sandbox="allow-downloads allow-forms allow-scripts"
           src={previewUrl.href}
           title={`Preview: ${screenName}`}
         />

@@ -52,7 +52,7 @@ function maxSideSum(mainWidth: number): number {
 function clampWidthsForMain(widths: Widths, mainWidth: number): Widths {
   const max = maxSideSum(mainWidth);
   if (max <= 0) {
-    return { left: MIN_LEFT, right: MIN_RIGHT };
+    return { left: 0, right: 0 };
   }
   let { left, right } = widths;
   left = Math.max(MIN_LEFT, left);

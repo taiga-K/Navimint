@@ -8,6 +8,7 @@ import {
   ScreensDocumentShapeError,
   validateScreensDocument,
 } from './validate-screens-document';
+import { errorMessage, isErrnoException } from './value-guards';
 
 export interface SavePreviewBaseUrlOptions {
   projectRoot: string | null;
@@ -48,19 +49,12 @@ export async function savePreviewBaseUrl(
     return documentShapeFailure(error, filePath);
   }
 
-  if (!isPlainObject(readResult.value) || !isPlainObject(readResult.value.project)) {
-    return {
-      ok: false,
-      reason: 'invalid-shape',
-      message: 'Expected "project" to be an object',
-      filePath,
-    };
-  }
-
+  const root = readResult.value as Record<string, unknown>;
+  const project = root.project as Record<string, unknown>;
   const nextValue = {
-    ...readResult.value,
+    ...root,
     project: {
-      ...readResult.value.project,
+      ...project,
       baseURL: parsedBaseUrl.href,
     },
   };
@@ -147,19 +141,4 @@ function documentShapeFailure(error: unknown, filePath: string): SavePreviewBase
     message: errorMessage(error),
     filePath,
   };
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isErrnoException(value: unknown): value is NodeJS.ErrnoException {
-  return value instanceof Error && typeof (value as NodeJS.ErrnoException).code === 'string';
-}
-
-function errorMessage(value: unknown): string {
-  if (value instanceof Error) {
-    return value.message;
-  }
-  return String(value);
 }
