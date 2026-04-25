@@ -129,7 +129,7 @@ export function ScreenFlowGraph() {
   }, [layoutState.elements, manualPositions, state.selectedScreenId]);
 
   useEffect(() => {
-    setFlowElements(selectedElements);
+    setFlowElements(null);
   }, [selectedElements]);
 
   const renderedElements = flowElements ?? selectedElements;
@@ -162,6 +162,7 @@ export function ScreenFlowGraph() {
       const next = upsertManualLayoutPositions(manualPositionsRef.current, movedNodes);
       manualPositionsRef.current = next;
       setManualPositions(next);
+      setFlowElements(null);
       writeManualLayoutPositions(layoutStorageScope, getLocalStorage(), next);
     },
     [layoutStorageScope],
