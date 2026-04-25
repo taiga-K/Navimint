@@ -3,12 +3,14 @@ import {
   createContext,
   createElement,
   type Dispatch,
+  type MutableRefObject,
   type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from 'react';
 
 import { getNavimintBridge } from '../../lib/navimint-bridge';
@@ -60,6 +62,8 @@ export interface WorkspaceContextValue {
   state: WorkspaceState;
   derived: WorkspaceDerived;
   dispatch: Dispatch<WorkspaceAction>;
+  /** Shared counter so sync and manual reloads invalidate each other's in-flight loads. */
+  loadSeqRef: MutableRefObject<number>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -71,9 +75,10 @@ export interface WorkspaceProviderProps {
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
   const derived = useMemo(() => deriveWorkspace(state), [state]);
+  const loadSeqRef = useRef(0);
   const value = useMemo<WorkspaceContextValue>(
-    () => ({ state, derived, dispatch }),
-    [state, derived],
+    () => ({ state, derived, dispatch, loadSeqRef }),
+    [state, derived, loadSeqRef],
   );
   return createElement(WorkspaceContext.Provider, { value }, children);
 }
@@ -94,17 +99,16 @@ export function useWorkspace(): WorkspaceContextValue {
  *   automatically refresh the document.
  */
 export function useWorkspaceSync(): void {
-  const { dispatch } = useWorkspace();
+  const { dispatch, loadSeqRef } = useWorkspace();
 
   useEffect(() => {
     const navimint = getNavimintBridge();
     let active = true;
-    let loadSeq = 0;
 
     async function runLoad(): Promise<void> {
-      const seq = ++loadSeq;
+      const seq = ++loadSeqRef.current;
       await reloadWorkspaceScreensDocument(dispatch, {
-        shouldAbort: () => !active || seq !== loadSeq,
+        shouldAbort: () => !active || seq !== loadSeqRef.current,
       });
     }
 
@@ -135,10 +139,10 @@ export function useWorkspaceSync(): void {
 
     return () => {
       active = false;
-      loadSeq += 1;
+      loadSeqRef.current += 1;
       unsubscribe();
     };
-  }, [dispatch]);
+  }, [dispatch, loadSeqRef]);
 }
 
 /**
@@ -156,8 +160,11 @@ export function useOpenProjectFolder(): () => void {
 
 /** Re-reads `screens.json` for the current project (e.g. after an external analysis step). */
 export function useReloadWorkspaceScreens(): () => void {
-  const { dispatch } = useWorkspace();
+  const { dispatch, loadSeqRef } = useWorkspace();
   return useCallback(() => {
-    void reloadWorkspaceScreensDocument(dispatch);
-  }, [dispatch]);
+    const seq = ++loadSeqRef.current;
+    void reloadWorkspaceScreensDocument(dispatch, {
+      shouldAbort: () => seq !== loadSeqRef.current,
+    });
+  }, [dispatch, loadSeqRef]);
 }

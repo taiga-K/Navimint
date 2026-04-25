@@ -21,7 +21,9 @@ function AppShell() {
     <div className="flex h-dvh w-dvw flex-col bg-app text-text-primary">
       <WorkspaceHeader
         activeView={activeView}
-        onNavigateSettings={() => setActiveView('settings')}
+        onNavigateSettings={() =>
+          setActiveView((v) => (v === 'settings' ? 'workspace' : 'settings'))
+        }
       />
       <div className="min-h-0 flex-1">
         {activeView === 'settings' ? (
