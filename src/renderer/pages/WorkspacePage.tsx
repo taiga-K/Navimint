@@ -1,5 +1,5 @@
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
-import { GraphPlaceholder } from '../features/graph/GraphPlaceholder';
+import { ScreenFlowGraph } from '../features/graph/ScreenFlowGraph';
 import { InspectorPlaceholder } from '../features/inspector/InspectorPlaceholder';
 import { ScreensSidebar } from '../features/sidebar/components/ScreensSidebar';
 import { selectSelectedScreen } from '../features/workspace/selectors';
@@ -10,7 +10,7 @@ export function WorkspacePage() {
 
   return (
     <WorkspaceLayout
-      graph={<GraphPlaceholder />}
+      graph={<ScreenFlowGraph />}
       inspector={<InspectorPlaceholder />}
       sidebar={<ScreensSidebar />}
       status={<StatusBar />}

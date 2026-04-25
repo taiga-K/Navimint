@@ -117,6 +117,63 @@ samp {
   color: var(--color-text-primary);
 }
 
+.react-flow {
+  --xy-background-color: var(--color-app);
+  --xy-node-border-default: var(--color-border-strong);
+  --xy-edge-stroke-default: var(--color-border-strong);
+  --xy-edge-stroke-selected-default: var(--color-accent-primary);
+  --xy-controls-button-background-color-default: var(--color-panel);
+  --xy-controls-button-background-color-hover-default: var(--color-elevated);
+  --xy-controls-button-color-default: var(--color-text-secondary);
+  --xy-controls-button-color-hover-default: var(--color-text-primary);
+  --xy-controls-button-border-color-default: var(--color-border-subtle);
+}
+
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+.react-flow__controls {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.react-flow__controls-button {
+  border-bottom-color: var(--color-border-subtle);
+}
+
+.react-flow__edge.transition-edge.animated .react-flow__edge-path {
+  stroke-dasharray: 8 6;
+  animation: navimint-edge-flow 850ms linear infinite;
+}
+
+.react-flow__edge.transition-edge--incoming .react-flow__edge-path,
+.react-flow__edge.transition-edge--outgoing .react-flow__edge-path,
+.react-flow__edge.transition-edge--self .react-flow__edge-path {
+  filter: drop-shadow(0 0 4px rgb(96 165 250 / 0.45));
+}
+
+.react-flow__attribution {
+  color: var(--color-text-muted);
+  background-color: var(--color-panel-muted);
+}
+
+@keyframes navimint-edge-flow {
+  from {
+    stroke-dashoffset: 14;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
