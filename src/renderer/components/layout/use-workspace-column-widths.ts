@@ -97,6 +97,7 @@ function startWorkspaceGutterDrag(
   setWidths: Dispatch<SetStateAction<Widths>>,
   setResizing: Dispatch<SetStateAction<'left' | 'right' | null>>,
   dragWidthsForPersistRef: MutableRefObject<Widths | null>,
+  bodyDragRestoreRef: MutableRefObject<{ userSelect: string } | null>,
 ): void {
   e.preventDefault();
   const target = e.currentTarget;
@@ -112,6 +113,7 @@ function startWorkspaceGutterDrag(
   target.setPointerCapture(pointerId);
   setResizing(side);
   const prevUserSelect = document.body.style.userSelect;
+  bodyDragRestoreRef.current = { userSelect: prevUserSelect };
   document.body.style.userSelect = 'none';
   document.body.style.cursor = 'col-resize';
 
@@ -157,6 +159,7 @@ function startWorkspaceGutterDrag(
     }
     document.body.style.userSelect = prevUserSelect;
     document.body.style.cursor = '';
+    bodyDragRestoreRef.current = null;
     setResizing(null);
     const toPersist = dragWidthsForPersistRef.current;
     dragWidthsForPersistRef.current = null;
@@ -175,6 +178,7 @@ export function useWorkspaceColumnWidths() {
   const [preferredWidths, setPreferredWidths] = useState<Widths>(loadInitialWidths);
   const widthsRef = useRef<Widths>(preferredWidths);
   const dragWidthsForPersistRef = useRef<Widths | null>(null);
+  const bodyDragRestoreRef = useRef<{ userSelect: string } | null>(null);
   const [mainWidth, setMainWidth] = useState(0);
   const [resizing, setResizing] = useState<null | 'left' | 'right'>(null);
 
@@ -206,6 +210,17 @@ export function useWorkspaceColumnWidths() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      const snapshot = bodyDragRestoreRef.current;
+      if (snapshot !== null) {
+        document.body.style.userSelect = snapshot.userSelect;
+        document.body.style.cursor = '';
+        bodyDragRestoreRef.current = null;
+      }
+    };
+  }, []);
+
   const onLeftGutterPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLDivElement>) => {
       startWorkspaceGutterDrag(
@@ -216,6 +231,7 @@ export function useWorkspaceColumnWidths() {
         setPreferredWidths,
         setResizing,
         dragWidthsForPersistRef,
+        bodyDragRestoreRef,
       );
     },
     [],
@@ -231,6 +247,7 @@ export function useWorkspaceColumnWidths() {
         setPreferredWidths,
         setResizing,
         dragWidthsForPersistRef,
+        bodyDragRestoreRef,
       );
     },
     [],

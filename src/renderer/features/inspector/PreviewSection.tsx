@@ -36,6 +36,7 @@ export function PreviewSection({
     () => resolvePreviewUrl(baseUrlDraft, route),
     [baseUrlDraft, route],
   );
+  const previewLoadKey = previewUrl.ok ? previewUrl.href : previewUrl.message;
   const baseUrlValidation = useMemo(
     () => parseHttpUrl(baseUrlDraft, 'Base URL'),
     [baseUrlDraft],
@@ -52,7 +53,7 @@ export function PreviewSection({
     setCopyState('idle');
     setCopyMessage(null);
     setIsPreviewLoading(previewUrl.ok);
-  }, [previewUrl]);
+  }, [previewLoadKey, previewUrl.ok]);
 
   const saveBaseUrl = useCallback(async () => {
     if (!isDirty) {
