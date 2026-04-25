@@ -21,7 +21,8 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@fontsource-variable/noto-sans-jp": "^5.2.10",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

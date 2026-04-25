@@ -1,3 +1,5 @@
+import { twMerge } from 'tailwind-merge';
+
 /** Compose Tailwind class names without pulling in `clsx` for the initial slice. */
 export type ClassValue =
   | string
@@ -35,5 +37,5 @@ export function cn(...values: ClassValue[]): string {
   for (const value of values) {
     append(buffer, value);
   }
-  return buffer.join(' ');
+  return twMerge(buffer.join(' '));
 }
