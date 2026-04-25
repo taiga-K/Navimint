@@ -17,7 +17,7 @@ export function TransitionsSection({
   const total = inboundTransitions.length + outboundTransitions.length;
 
   return (
-    <InspectorSection count={total} title="Transitions">
+    <InspectorSection className="min-h-0 flex-1 overflow-y-auto" count={total} title="Transitions">
       <TransitionGroup
         direction="inbound"
         screenById={screenById}

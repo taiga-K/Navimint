@@ -1,11 +1,11 @@
 import { parseHttpUrl, type PreviewUrlResult, resolvePreviewUrl } from '@shared/utils/preview-url';
-import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { cn } from '../../lib/cn';
 import { getNavimintBridge } from '../../lib/navimint-bridge';
 import { InspectorSection } from './InspectorSection';
 
-type SaveState = 'idle' | 'saving' | 'error';
+type SaveState = 'idle' | 'error';
 type CopyState = 'idle' | 'copied' | 'error';
 
 const ICON_BUTTON_CLASS =
@@ -25,7 +25,6 @@ export function PreviewSection({
   onBaseUrlSaved,
 }: PreviewSectionProps) {
   const bridge = useMemo(() => getNavimintBridge(), []);
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [baseUrlDraft, setBaseUrlDraft] = useState(baseUrl);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -65,7 +64,7 @@ export function PreviewSection({
       return;
     }
 
-    setSaveState('saving');
+    setSaveState('idle');
     setSaveMessage(null);
     const result = await bridge.savePreviewBaseUrl(baseUrlValidation.href);
     if (!result.ok) {
@@ -117,49 +116,28 @@ export function PreviewSection({
 
   return (
     <InspectorSection
-      accessory={<PreviewStatus baseUrlResult={baseUrlValidation} />}
-      className="min-h-[360px] flex-1 pb-0"
+      className="h-[40%] min-h-[220px] max-h-[48%] shrink-0 gap-2 overflow-hidden border-t border-border-strong py-3 pb-0"
       title="Preview"
     >
-      <div className="flex flex-col gap-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-text-muted">Base URL</span>
-          <div className="flex h-10 items-center gap-2 rounded-md border border-border-strong bg-panel-muted px-3 transition-colors duration-[120ms] focus-within:border-accent-primary focus-within:shadow-focus">
-            <GlobeIcon />
-            <input
-              className="min-w-0 flex-1 bg-transparent font-mono text-sm text-text-primary outline-none placeholder:text-text-muted"
-              onBlur={() => void saveBaseUrl()}
-              onChange={(event) => {
-                setBaseUrlDraft(event.target.value);
-                setSaveState('idle');
-                setSaveMessage(null);
-              }}
-              onKeyDown={handleBaseUrlKeyDown}
-              ref={inputRef}
-              spellCheck={false}
-              value={baseUrlDraft}
-            />
-            <button
-              aria-label="Edit base URL"
-              className={ICON_BUTTON_CLASS}
-              onClick={() => inputRef.current?.focus()}
-              type="button"
-            >
-              <EditIcon />
-            </button>
-          </div>
-        </label>
-        <StatusText state={saveState} text={saveMessage} />
-      </div>
-
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2 text-text-muted">
-          <RouteIcon />
-          <code className="min-w-0 truncate font-mono text-xs">
-            {previewUrl.ok ? previewPathLabel(previewUrl.href) : previewUrl.message}
-          </code>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
+      <label className="flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-md border border-border-strong bg-panel-muted px-2.5 transition-colors duration-[120ms] focus-within:border-accent-primary focus-within:shadow-focus">
+        <GlobeIcon />
+        <input
+          aria-label="Base URL"
+          className="min-w-0 flex-1 bg-transparent font-mono text-xs text-text-primary outline-none placeholder:text-text-muted"
+          onBlur={() => void saveBaseUrl()}
+          onChange={(event) => {
+            setBaseUrlDraft(event.target.value);
+            setSaveState('idle');
+            setSaveMessage(null);
+          }}
+          onKeyDown={handleBaseUrlKeyDown}
+          spellCheck={false}
+          value={baseUrlDraft}
+        />
+        <code className="shrink-0 truncate font-mono text-xs text-text-muted">
+          {previewUrl.ok ? previewPathLabel(previewUrl.href) : previewUrl.message}
+        </code>
+        <span className="flex shrink-0 items-center gap-1">
           <button
             aria-label="Copy preview URL"
             className={ICON_BUTTON_CLASS}
@@ -178,8 +156,9 @@ export function PreviewSection({
           >
             <ReloadIcon />
           </button>
-        </div>
-      </div>
+        </span>
+      </label>
+      <StatusText state={saveState} text={saveMessage} />
       <StatusText state={copyState} text={copyMessage} />
 
       <PreviewFrame
@@ -210,7 +189,7 @@ function PreviewFrame({
 }: PreviewFrameProps) {
   if (!previewUrl.ok) {
     return (
-      <div className="-mx-4 -mb-4 flex min-h-60 flex-col items-center justify-center gap-2 border-t border-border-strong bg-panel-muted px-4 py-6 text-center">
+      <div className="-mx-4 -mb-4 flex min-h-0 flex-1 flex-col items-center justify-center gap-2 border-t border-border-strong bg-panel-muted px-4 py-6 text-center">
         <p className="text-sm font-medium text-text-secondary">Preview unavailable</p>
         <p className="text-xs text-text-muted">{previewUrl.message}</p>
       </div>
@@ -218,8 +197,8 @@ function PreviewFrame({
   }
 
   return (
-    <div className="-mx-4 -mb-4 min-h-60 flex-1 border-t border-border-strong bg-white">
-      <div className="relative min-h-60 h-full overflow-hidden bg-white">
+    <div className="-mx-4 -mb-4 min-h-0 flex-1 border-t border-border-strong bg-white">
+      <div className="relative h-full min-h-0 overflow-hidden bg-white">
         {isLoading ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white text-center">
             <span className="size-5 rounded-full border border-border-subtle border-t-text-muted" />
@@ -227,7 +206,7 @@ function PreviewFrame({
           </div>
         ) : null}
         <iframe
-          className="h-full min-h-60 w-full bg-white"
+          className="h-full w-full bg-white"
           key={`${previewUrl.href}:${reloadNonce}`}
           onLoad={onLoad}
           referrerPolicy="no-referrer"
@@ -237,18 +216,6 @@ function PreviewFrame({
         />
       </div>
     </div>
-  );
-}
-
-function PreviewStatus({ baseUrlResult }: { baseUrlResult: ReturnType<typeof parseHttpUrl> }) {
-  if (!baseUrlResult.ok) {
-    return null;
-  }
-  return (
-    <span className="flex items-center gap-1.5 font-mono text-xs text-text-muted">
-      <span className="size-2 rounded-full bg-accent-success" />
-      {previewEndpointLabel(baseUrlResult.url)}
-    </span>
   );
 }
 
@@ -273,13 +240,6 @@ function StatusText({ state, text }: { state: SaveState | CopyState; text: strin
   );
 }
 
-function previewEndpointLabel(url: URL): string {
-  if (url.port.length > 0) {
-    return `:${url.port}`;
-  }
-  return url.host;
-}
-
 function previewPathLabel(href: string): string {
   const url = new URL(href);
   return `${url.pathname}${url.search}${url.hash}`;
@@ -297,37 +257,6 @@ function GlobeIcon() {
     >
       <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
       <path d="M3.6 9h16.8M3.6 15h16.8M12 3a13.2 13.2 0 0 1 0 18M12 3a13.2 13.2 0 0 0 0 18" />
-    </svg>
-  );
-}
-
-function EditIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      viewBox="0 0 24 24"
-    >
-      <path d="m16.9 4.2 2.9 2.9M4 20h3.2L20.6 6.6a2 2 0 0 0-3.2-3.2L4 16.8V20Z" />
-    </svg>
-  );
-}
-
-function RouteIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-4 shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.6}
-      viewBox="0 0 24 24"
-    >
-      <path d="M5 7v4a4 4 0 0 0 4 4h8" />
-      <path d="m14 11 4 4-4 4" />
     </svg>
   );
 }

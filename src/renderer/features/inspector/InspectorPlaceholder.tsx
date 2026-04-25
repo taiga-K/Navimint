@@ -24,7 +24,7 @@ export function InspectorPlaceholder() {
   const baseUrl = state.previewBaseUrl ?? state.document?.project.baseURL ?? '';
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <ScreenHeader screen={screen} />
       <DetailsSection screen={screen} />
       <TransitionsSection
@@ -62,13 +62,14 @@ function ScreenHeader({ screen }: { screen: ScreenDefinition }) {
 
 function DetailsSection({ screen }: { screen: ScreenDefinition }) {
   return (
-    <InspectorSection title="Details">
+    <InspectorSection className="shrink-0" title="Details">
       <DetailBlock label="Name" value={screen.name} />
       <DetailBlock label="Route" mono value={screen.route} />
       <DetailBlock
         label="Description"
         muted={screen.description === undefined}
         value={screen.description ?? 'No description'}
+        valueClassName="max-h-24 overflow-y-auto pr-1"
       />
     </InspectorSection>
   );
