@@ -1,10 +1,8 @@
 import type { ScreenDefinition } from '@shared/types';
 
+import { FNV1A_HASH_RADIX, FNV1A_OFFSET, fnv1aUpdate } from './fnv1a-string';
 import type { GraphEdgeGroup, TransitionInput } from './graph-types';
 
-const HASH_OFFSET = 0x811c9dc5;
-const HASH_PRIME = 0x01000193;
-const HASH_RADIX = 36;
 const GROUP_DELIMITER = '\u001f';
 
 export function stableGraphId(prefix: string, parts: readonly string[]): string {
@@ -82,19 +80,10 @@ function buildTransitionId(
 }
 
 function hashParts(parts: readonly string[]): string {
-  let hash = HASH_OFFSET;
+  let hash = FNV1A_OFFSET;
   for (const part of parts) {
-    hash = hashString(hash, part);
-    hash = hashString(hash, GROUP_DELIMITER);
+    hash = fnv1aUpdate(hash, part);
+    hash = fnv1aUpdate(hash, GROUP_DELIMITER);
   }
-  return (hash >>> 0).toString(HASH_RADIX);
-}
-
-function hashString(seed: number, value: string): number {
-  let hash = seed;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, HASH_PRIME);
-  }
-  return hash;
+  return (hash >>> 0).toString(FNV1A_HASH_RADIX);
 }

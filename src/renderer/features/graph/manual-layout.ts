@@ -1,10 +1,8 @@
+import { fnv1aHashString } from './fnv1a-string';
 import type { FlowPoint, LayoutedGraphElements } from './graph-types';
 
 const STORAGE_KEY_PREFIX = 'navimint:graph-layout:v1';
 const STORAGE_SCHEMA_VERSION = 1;
-const HASH_OFFSET = 0x811c9dc5;
-const HASH_PRIME = 0x01000193;
-const HASH_RADIX = 36;
 const MAX_POSITION_ABS_VALUE = 1_000_000;
 const MAX_SCREEN_ID_LENGTH = 512;
 const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -128,7 +126,7 @@ export function getManualLayoutStorageKey(scope: string | null): string | null {
   if (normalizedScope === undefined || normalizedScope.length === 0) {
     return null;
   }
-  return `${STORAGE_KEY_PREFIX}:${hashString(normalizedScope)}`;
+  return `${STORAGE_KEY_PREFIX}:${fnv1aHashString(normalizedScope)}`;
 }
 
 export function createEmptyPositions(): ManualNodePositions {
@@ -199,13 +197,4 @@ function isValidCoordinate(value: unknown): value is number {
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function hashString(value: string): string {
-  let hash = HASH_OFFSET;
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, HASH_PRIME);
-  }
-  return (hash >>> 0).toString(HASH_RADIX);
 }

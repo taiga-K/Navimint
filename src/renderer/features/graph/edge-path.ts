@@ -32,38 +32,6 @@ export function buildRoundedPolylinePath(
   return commands.join(' ');
 }
 
-export function getPathMidpoint(points: readonly FlowPoint[]): FlowPoint | null {
-  if (points.length === 0) {
-    return null;
-  }
-  if (points.length === 1) {
-    return points[0];
-  }
-
-  const totalLength = getPathLength(points);
-  if (totalLength === 0) {
-    return points[0];
-  }
-
-  const midpointDistance = totalLength / 2;
-  let travelled = 0;
-  for (let index = 1; index < points.length; index += 1) {
-    const previous = points[index - 1];
-    const current = points[index];
-    const segmentLength = distance(previous, current);
-    if (travelled + segmentLength >= midpointDistance) {
-      const ratio = (midpointDistance - travelled) / segmentLength;
-      return {
-        x: previous.x + (current.x - previous.x) * ratio,
-        y: previous.y + (current.y - previous.y) * ratio,
-      };
-    }
-    travelled += segmentLength;
-  }
-
-  return points[points.length - 1];
-}
-
 function moveToward(from: FlowPoint, to: FlowPoint, maxDistance: number): FlowPoint {
   const segmentLength = distance(from, to);
   if (segmentLength === 0) {
@@ -75,14 +43,6 @@ function moveToward(from: FlowPoint, to: FlowPoint, maxDistance: number): FlowPo
     x: from.x + (to.x - from.x) * ratio,
     y: from.y + (to.y - from.y) * ratio,
   };
-}
-
-function getPathLength(points: readonly FlowPoint[]): number {
-  let total = 0;
-  for (let index = 1; index < points.length; index += 1) {
-    total += distance(points[index - 1], points[index]);
-  }
-  return total;
 }
 
 function distance(a: FlowPoint, b: FlowPoint): number {
