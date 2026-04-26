@@ -3,22 +3,67 @@ import {
   createContext,
   createElement,
   type Dispatch,
+  type MutableRefObject,
   type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from 'react';
 
 import { getNavimintBridge } from '../../lib/navimint-bridge';
 import { deriveWorkspace } from './selectors';
 import { initialWorkspaceState, type WorkspaceAction, workspaceReducer } from './store';
 
+/**
+ * Loads `screens.json` from disk into workspace state (used on project change and manual refresh).
+ */
+export async function reloadWorkspaceScreensDocument(
+  dispatch: Dispatch<WorkspaceAction>,
+  options?: { shouldAbort?: () => boolean },
+): Promise<void> {
+  const navimint = getNavimintBridge();
+  dispatch({ type: 'load-started' });
+  try {
+    const result = await navimint.loadScreensDocument();
+    if (options?.shouldAbort?.()) {
+      return;
+    }
+    if (result.ok) {
+      dispatch({ type: 'document-loaded', document: result.document });
+      return;
+    }
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: result.reason,
+        message: result.message,
+        filePath: result.filePath,
+      },
+    });
+  } catch (error) {
+    if (options?.shouldAbort?.()) {
+      return;
+    }
+    dispatch({
+      type: 'document-load-failed',
+      failure: {
+        reason: 'unexpected-error',
+        message: error instanceof Error ? error.message : String(error),
+        filePath: null,
+      },
+    });
+  }
+}
+
 export interface WorkspaceContextValue {
   state: WorkspaceState;
   derived: WorkspaceDerived;
   dispatch: Dispatch<WorkspaceAction>;
+  /** Shared counter so sync and manual reloads invalidate each other's in-flight loads. */
+  loadSeqRef: MutableRefObject<number>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -30,9 +75,10 @@ export interface WorkspaceProviderProps {
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const [state, dispatch] = useReducer(workspaceReducer, initialWorkspaceState);
   const derived = useMemo(() => deriveWorkspace(state), [state]);
+  const loadSeqRef = useRef(0);
   const value = useMemo<WorkspaceContextValue>(
-    () => ({ state, derived, dispatch }),
-    [state, derived],
+    () => ({ state, derived, dispatch, loadSeqRef }),
+    [state, derived, loadSeqRef],
   );
   return createElement(WorkspaceContext.Provider, { value }, children);
 }
@@ -53,46 +99,17 @@ export function useWorkspace(): WorkspaceContextValue {
  *   automatically refresh the document.
  */
 export function useWorkspaceSync(): void {
-  const { dispatch } = useWorkspace();
+  const { dispatch, loadSeqRef } = useWorkspace();
 
   useEffect(() => {
     const navimint = getNavimintBridge();
     let active = true;
-    let loadSeq = 0;
 
     async function runLoad(): Promise<void> {
-      const seq = ++loadSeq;
-      dispatch({ type: 'load-started' });
-      try {
-        const result = await navimint.loadScreensDocument();
-        if (!active || seq !== loadSeq) {
-          return;
-        }
-        if (result.ok) {
-          dispatch({ type: 'document-loaded', document: result.document });
-          return;
-        }
-        dispatch({
-          type: 'document-load-failed',
-          failure: {
-            reason: result.reason,
-            message: result.message,
-            filePath: result.filePath,
-          },
-        });
-      } catch (error) {
-        if (!active || seq !== loadSeq) {
-          return;
-        }
-        dispatch({
-          type: 'document-load-failed',
-          failure: {
-            reason: 'unexpected-error',
-            message: error instanceof Error ? error.message : String(error),
-            filePath: null,
-          },
-        });
-      }
+      const seq = ++loadSeqRef.current;
+      await reloadWorkspaceScreensDocument(dispatch, {
+        shouldAbort: () => !active || seq !== loadSeqRef.current,
+      });
     }
 
     void (async () => {
@@ -122,10 +139,10 @@ export function useWorkspaceSync(): void {
 
     return () => {
       active = false;
-      loadSeq += 1;
+      loadSeqRef.current += 1;
       unsubscribe();
     };
-  }, [dispatch]);
+  }, [dispatch, loadSeqRef]);
 }
 
 /**
@@ -139,4 +156,15 @@ export function useOpenProjectFolder(): () => void {
       console.error('[workspace] openProjectDialog failed', error);
     });
   }, []);
+}
+
+/** Re-reads `screens.json` for the current project (e.g. after an external analysis step). */
+export function useReloadWorkspaceScreens(): () => void {
+  const { dispatch, loadSeqRef } = useWorkspace();
+  return useCallback(() => {
+    const seq = ++loadSeqRef.current;
+    void reloadWorkspaceScreensDocument(dispatch, {
+      shouldAbort: () => seq !== loadSeqRef.current,
+    });
+  }, [dispatch, loadSeqRef]);
 }

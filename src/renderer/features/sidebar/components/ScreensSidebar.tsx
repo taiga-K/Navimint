@@ -39,7 +39,7 @@ export function ScreensSidebar() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <SidebarHeader projectRoot={state.projectRoot} onOpenFolder={openProjectFolder}>
+      <SidebarHeader onOpenFolder={openProjectFolder}>
         <ScreensSearchInput onChange={handleSearchChange} value={state.searchQuery} />
       </SidebarHeader>
       <div className="min-h-0 flex-1 overflow-y-auto py-1">
@@ -68,11 +68,10 @@ export function ScreensSidebar() {
 
 interface SidebarHeaderProps {
   children: ReactNode;
-  projectRoot: string | null;
   onOpenFolder: () => void;
 }
 
-function SidebarHeader({ children, projectRoot, onOpenFolder }: SidebarHeaderProps) {
+function SidebarHeader({ children, onOpenFolder }: SidebarHeaderProps) {
   return (
     <header className="flex flex-col gap-2 border-b border-border-strong px-3 py-3">
       <div className="flex items-center justify-between gap-2">
@@ -89,11 +88,6 @@ function SidebarHeader({ children, projectRoot, onOpenFolder }: SidebarHeaderPro
           <FolderOpenIcon />
         </button>
       </div>
-      {projectRoot === null ? null : (
-        <code className="truncate font-mono text-xs text-text-muted" title={projectRoot}>
-          {projectRoot}
-        </code>
-      )}
       {children}
     </header>
   );
@@ -274,10 +268,11 @@ function FolderOpenIcon() {
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
+        d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
       />
     </svg>
   );
 }
+
