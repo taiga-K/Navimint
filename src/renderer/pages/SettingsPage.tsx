@@ -90,7 +90,7 @@ export function SettingsPage() {
   }
 
   const canDelete = deleteState !== 'deleting' && status.source === 'keychain';
-  const maskedApiKey = '•'.repeat(status.maskedLength ?? FALLBACK_MASKED_API_KEY_LENGTH);
+  const maskedApiKey = '•'.repeat(FALLBACK_MASKED_API_KEY_LENGTH);
   const apiKeyInputValue = status.configured && !isEditingApiKey ? maskedApiKey : apiKeyDraft;
 
   return (

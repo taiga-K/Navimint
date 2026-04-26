@@ -183,14 +183,3 @@ export function useAnalyzeUi(): () => Promise<AnalyzeUiResult> {
     return result;
   }, [dispatch, loadSeqRef]);
 }
-
-/** Re-reads `screens.json` for the current project (e.g. after an external analysis step). */
-export function useReloadWorkspaceScreens(): () => void {
-  const { dispatch, loadSeqRef } = useWorkspace();
-  return useCallback(() => {
-    const seq = ++loadSeqRef.current;
-    void reloadWorkspaceScreensDocument(dispatch, {
-      shouldAbort: () => seq !== loadSeqRef.current,
-    });
-  }, [dispatch, loadSeqRef]);
-}

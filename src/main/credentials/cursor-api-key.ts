@@ -16,24 +16,24 @@ export async function getCursorApiKeyStatus(): Promise<CursorApiKeyStatus> {
   const envValue = getEnvCursorApiKey();
   const keychainValue = await getStoredCursorApiKey(envValue !== null);
   if (keychainValue !== null) {
-    return configuredStatus('keychain', keychainValue);
+    return configuredStatus('keychain');
   }
   if (envValue !== null) {
-    return configuredStatus('env', envValue);
+    return configuredStatus('env');
   }
   return { configured: false, source: null };
 }
 
 export async function saveCursorApiKey(apiKey: string): Promise<CursorApiKeyStatus> {
   await setPassword(SERVICE_NAME, ACCOUNT_NAME, apiKey);
-  return configuredStatus('keychain', apiKey);
+  return configuredStatus('keychain');
 }
 
 export async function deleteStoredCursorApiKey(): Promise<CursorApiKeyStatus> {
   await deletePassword(SERVICE_NAME, ACCOUNT_NAME);
   const envValue = getEnvCursorApiKey();
   if (envValue !== null) {
-    return configuredStatus('env', envValue);
+    return configuredStatus('env');
   }
   return { configured: false, source: null };
 }
@@ -72,9 +72,6 @@ function normalizeApiKey(value: string | null | undefined): string | null {
   return trimmed === undefined || trimmed.length === 0 ? null : trimmed;
 }
 
-function configuredStatus(
-  source: 'keychain' | 'env',
-  apiKey: string,
-): CursorApiKeyStatus {
-  return { configured: true, source, maskedLength: apiKey.length };
+function configuredStatus(source: 'keychain' | 'env'): CursorApiKeyStatus {
+  return { configured: true, source };
 }
