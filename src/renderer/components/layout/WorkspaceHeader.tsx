@@ -1,57 +1,32 @@
-import { useEffect, useState } from 'react';
-
-import { useAnalyzeUi, useWorkspace } from '../../features/workspace/use-workspace';
+import { useWorkspace } from '../../features/workspace/use-workspace';
 import { cn } from '../../lib/cn';
 import { compactProjectLabel } from '../../lib/project-label';
 
 interface WorkspaceHeaderProps {
+  analysisFeedback: AnalysisFeedback | null;
+  isAnalyzing: boolean;
+  onAnalyzeUi: () => void;
   onOpenSettings: () => void;
 }
-
-const ANALYSIS_FEEDBACK_MS = 3200;
 
 const ICON_BUTTON_CLASS =
   'inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-panel text-text-muted transition-colors duration-[120ms] hover:border-accent-primary hover:bg-elevated hover:text-text-primary focus:outline-none focus-visible:shadow-focus';
 
-type AnalysisFeedback =
+export type AnalysisFeedback =
   | { kind: 'success'; message: string }
   | { kind: 'error'; message: string };
 
-export function WorkspaceHeader({ onOpenSettings }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({
+  analysisFeedback,
+  isAnalyzing,
+  onAnalyzeUi,
+  onOpenSettings,
+}: WorkspaceHeaderProps) {
   const { state } = useWorkspace();
-  const analyzeUi = useAnalyzeUi();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisFeedback, setAnalysisFeedback] = useState<AnalysisFeedback | null>(null);
   const hasProject = state.projectRoot !== null;
   const isLoadingScreens = state.loadState === 'loading';
   const isAnalyzeDisabled = !hasProject || isAnalyzing || isLoadingScreens;
   const projectLabel = compactProjectLabel(state.document?.project.name ?? state.projectRoot);
-
-  useEffect(() => {
-    if (analysisFeedback === null) {
-      return;
-    }
-    const timerId = window.setTimeout(() => {
-      setAnalysisFeedback(null);
-    }, ANALYSIS_FEEDBACK_MS);
-    return () => window.clearTimeout(timerId);
-  }, [analysisFeedback]);
-
-  function handleAnalyzeClick(): void {
-    setAnalysisFeedback(null);
-    setIsAnalyzing(true);
-    void analyzeUi()
-      .then((result) => {
-        if (result.ok) {
-          setAnalysisFeedback({ kind: 'success', message: 'screens.json updated' });
-          return;
-        }
-        setAnalysisFeedback({ kind: 'error', message: result.message });
-      })
-      .finally(() => {
-        setIsAnalyzing(false);
-      });
-  }
 
   function handleOpenSettingsClick(): void {
     onOpenSettings();
@@ -82,7 +57,7 @@ export function WorkspaceHeader({ onOpenSettings }: WorkspaceHeaderProps) {
           aria-busy={isAnalyzing}
           className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border-strong bg-elevated px-3 text-xs font-semibold text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border-strong disabled:hover:text-text-secondary"
           disabled={isAnalyzeDisabled}
-          onClick={handleAnalyzeClick}
+          onClick={onAnalyzeUi}
           title={hasProject ? 'Analyze UI' : 'Open a project folder first'}
           type="button"
         >
