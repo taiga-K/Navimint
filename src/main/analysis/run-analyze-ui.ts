@@ -11,16 +11,11 @@ export interface RunAnalyzeUiOptions {
 export async function runAnalyzeUi(options: RunAnalyzeUiOptions): Promise<string> {
   const prompt = createAnalyzeUiPrompt(options);
 
-  let result;
-  try {
-    result = await Agent.prompt(prompt, {
-      apiKey: options.apiKey,
-      model: { id: 'composer-2' },
-      local: { cwd: options.projectRoot },
-    });
-  } catch (error) {
-    throw error;
-  }
+  const result = await Agent.prompt(prompt, {
+    apiKey: options.apiKey,
+    model: { id: 'composer-2' },
+    local: { cwd: options.projectRoot },
+  });
 
   if (result.result === undefined || result.result.trim().length === 0) {
     const streamedJson = await runAnalyzeUiWithStream(prompt, options);

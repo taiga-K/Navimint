@@ -3,19 +3,19 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { getNavimintBridge } from '../lib/navimint-bridge';
 
-type SaveState = 'idle' | 'saving' | 'error' | 'saved';
-type DeleteState = 'idle' | 'deleting' | 'error' | 'deleted';
+type DeleteState = 'idle' | 'deleting';
 
 const API_KEY_SAVE_DEBOUNCE_MS = 700;
+const FALLBACK_MASKED_API_KEY_LENGTH = 24;
 
 export function SettingsPage() {
   const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [isEditingApiKey, setIsEditingApiKey] = useState(false);
   const [status, setStatus] = useState<CursorApiKeyStatus>({
     configured: false,
     source: null,
   });
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<SaveState>('idle');
   const [deleteState, setDeleteState] = useState<DeleteState>('idle');
 
   useEffect(() => {
@@ -41,13 +41,12 @@ export function SettingsPage() {
   const apiKeyToSave = useMemo(() => apiKeyDraft.trim(), [apiKeyDraft]);
 
   useEffect(() => {
-    if (apiKeyToSave.length === 0) {
+    if (!isEditingApiKey || apiKeyToSave.length === 0) {
       return;
     }
 
     let active = true;
     const timerId = window.setTimeout(() => {
-      setSaveState('saving');
       setDeleteState('idle');
       setStatusMessage(null);
 
@@ -58,12 +57,12 @@ export function SettingsPage() {
             return;
           }
           if (!result.ok) {
-            setSaveState('error');
             setStatusMessage(result.message);
             return;
           }
           setStatus(result.status);
-          setSaveState('saved');
+          setApiKeyDraft('');
+          setIsEditingApiKey(false);
         });
     }, API_KEY_SAVE_DEBOUNCE_MS);
 
@@ -71,26 +70,28 @@ export function SettingsPage() {
       active = false;
       window.clearTimeout(timerId);
     };
-  }, [apiKeyToSave]);
+  }, [apiKeyToSave, isEditingApiKey]);
 
   async function handleDelete(): Promise<void> {
     setDeleteState('deleting');
-    setSaveState('idle');
     setStatusMessage(null);
 
     const result = await getNavimintBridge().deleteCursorApiKey();
     if (!result.ok) {
-      setDeleteState('error');
+      setDeleteState('idle');
       setStatusMessage(result.message);
       return;
     }
 
     setStatus(result.status);
     setApiKeyDraft('');
-    setDeleteState('deleted');
+    setIsEditingApiKey(false);
+    setDeleteState('idle');
   }
 
   const canDelete = deleteState !== 'deleting' && status.source === 'keychain';
+  const maskedApiKey = '•'.repeat(status.maskedLength ?? FALLBACK_MASKED_API_KEY_LENGTH);
+  const apiKeyInputValue = status.configured && !isEditingApiKey ? maskedApiKey : apiKeyDraft;
 
   return (
     <main className="flex h-dvh min-h-0 bg-app text-text-primary">
@@ -119,37 +120,48 @@ export function SettingsPage() {
             <div className="flex min-w-0 flex-col gap-3">
               <label className="flex flex-col gap-2">
                 <span className="text-xs font-medium text-text-secondary">API Key</span>
-                <input
-                  autoComplete="off"
-                  className="h-9 rounded-md border border-border-subtle bg-panel px-3 font-mono text-sm text-text-primary outline-none transition-colors duration-[120ms] placeholder:text-text-muted hover:border-border-strong focus:border-accent-primary focus:shadow-focus"
-                  onChange={(event) => {
-                    setApiKeyDraft(event.target.value);
-                    setSaveState('idle');
-                    setStatusMessage(null);
-                  }}
-                  placeholder={status.configured ? 'Enter a new key to replace the saved key' : 'Enter Cursor API key'}
-                  spellCheck={false}
-                  type="password"
-                  value={apiKeyDraft}
-                />
+                <span className="relative">
+                  <input
+                    autoComplete="off"
+                    className="h-9 w-full rounded-md border border-border-subtle bg-panel px-3 pr-10 font-mono text-sm text-text-primary outline-none transition-colors duration-[120ms] placeholder:text-text-muted hover:border-border-strong focus:border-accent-primary focus:shadow-focus"
+                    onChange={(event) => {
+                      setIsEditingApiKey(true);
+                      setApiKeyDraft(event.target.value);
+                      setStatusMessage(null);
+                    }}
+                    onBlur={() => {
+                      if (status.configured && apiKeyDraft.trim().length === 0) {
+                        setIsEditingApiKey(false);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (status.configured && !isEditingApiKey) {
+                        setIsEditingApiKey(true);
+                        setApiKeyDraft('');
+                      }
+                    }}
+                    placeholder={status.configured ? 'Paste a new key to replace the saved key' : 'Enter Cursor API key'}
+                    spellCheck={false}
+                    type="password"
+                    value={apiKeyInputValue}
+                  />
+                  {status.source === 'keychain' ? (
+                    <button
+                      aria-label="Delete saved Cursor API key"
+                      className="absolute right-1.5 top-1/2 inline-flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-[120ms] hover:bg-elevated hover:text-accent-danger focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-muted"
+                      disabled={!canDelete}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => void handleDelete()}
+                      title="Delete saved key"
+                      type="button"
+                    >
+                      <TrashIcon />
+                    </button>
+                  ) : null}
+                </span>
               </label>
 
-              <div className="flex items-center gap-2">
-                {status.source === 'keychain' ? (
-                  <button
-                    className="inline-flex h-8 cursor-pointer items-center rounded-md border border-transparent px-3 text-xs font-semibold text-text-muted transition-colors duration-[120ms] hover:bg-elevated hover:text-accent-danger focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-muted"
-                    disabled={!canDelete}
-                    onClick={() => void handleDelete()}
-                    type="button"
-                  >
-                    {deleteState === 'deleting' ? 'Deleting...' : 'Delete Saved Key'}
-                  </button>
-                ) : null}
-              </div>
-
               <SettingsMessage
-                deleteState={deleteState}
-                saveState={saveState}
                 statusMessage={statusMessage}
               />
             </div>
@@ -160,20 +172,29 @@ export function SettingsPage() {
   );
 }
 
-function SettingsMessage({
-  deleteState,
-  saveState,
-  statusMessage,
-}: {
-  deleteState: DeleteState;
-  saveState: SaveState;
-  statusMessage: string | null;
-}) {
+function TrashIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.6}
+      viewBox="0 0 24 24"
+    >
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+function SettingsMessage({ statusMessage }: { statusMessage: string | null }) {
   if (statusMessage !== null) {
     return <p className="text-xs text-accent-danger">{statusMessage}</p>;
-  }
-  if (deleteState === 'deleted') {
-    return <p className="text-xs text-text-muted">Saved Cursor API key deleted.</p>;
   }
   return null;
 }

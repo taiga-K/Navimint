@@ -14,7 +14,6 @@ import {
 import { runAnalyzeUi } from '../analysis/run-analyze-ui';
 import {
   CursorApiKeyNotConfiguredError,
-  getCursorApiKeyStatus,
   resolveCursorApiKey,
 } from '../credentials/cursor-api-key';
 import { readScreensDocument } from '../utils/read-screens-document';

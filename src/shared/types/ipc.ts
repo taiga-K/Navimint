@@ -68,6 +68,7 @@ export type CursorApiKeySource = 'keychain' | 'env' | null;
 export interface CursorApiKeyStatus {
   configured: boolean;
   source: CursorApiKeySource;
+  maskedLength?: number;
 }
 
 export interface CursorApiKeyStatusSuccess {
