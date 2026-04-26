@@ -1,23 +1,36 @@
-import { useReloadWorkspaceScreens, useWorkspace } from '../../features/workspace/use-workspace';
+import { useWorkspace } from '../../features/workspace/use-workspace';
 import { cn } from '../../lib/cn';
 import { compactProjectLabel } from '../../lib/project-label';
 
-export type AppView = 'workspace' | 'settings';
-
 interface WorkspaceHeaderProps {
-  activeView: AppView;
-  onNavigateSettings: () => void;
+  analysisFeedback: AnalysisFeedback | null;
+  isAnalyzing: boolean;
+  onAnalyzeUi: () => void;
+  onOpenSettings: () => void;
 }
 
 const ICON_BUTTON_CLASS =
   'inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-border-strong bg-panel text-text-muted transition-colors duration-[120ms] hover:border-accent-primary hover:bg-elevated hover:text-text-primary focus:outline-none focus-visible:shadow-focus';
 
-export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHeaderProps) {
+export type AnalysisFeedback =
+  | { kind: 'success'; message: string }
+  | { kind: 'error'; message: string };
+
+export function WorkspaceHeader({
+  analysisFeedback,
+  isAnalyzing,
+  onAnalyzeUi,
+  onOpenSettings,
+}: WorkspaceHeaderProps) {
   const { state } = useWorkspace();
-  const reloadScreens = useReloadWorkspaceScreens();
   const hasProject = state.projectRoot !== null;
-  const isReloadingScreens = state.loadState === 'loading';
+  const isLoadingScreens = state.loadState === 'loading';
+  const isAnalyzeDisabled = !hasProject || isAnalyzing || isLoadingScreens;
   const projectLabel = compactProjectLabel(state.document?.project.name ?? state.projectRoot);
+
+  function handleOpenSettingsClick(): void {
+    onOpenSettings();
+  }
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border-strong bg-panel px-3 text-sm text-text-primary">
@@ -25,29 +38,36 @@ export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHea
         <span className="block truncate text-sm font-semibold text-text-primary">
           {projectLabel ?? 'No project'}
         </span>
+        {analysisFeedback === null ? null : (
+          <span
+            className={cn(
+              'block truncate text-xs',
+              analysisFeedback.kind === 'error'
+                ? 'text-accent-danger'
+                : 'text-text-muted',
+            )}
+          >
+            {analysisFeedback.message}
+          </span>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         <button
-          aria-busy={isReloadingScreens}
+          aria-busy={isAnalyzing}
           className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md border border-border-strong bg-elevated px-3 text-xs font-semibold text-text-secondary transition-colors duration-[120ms] hover:border-accent-primary hover:text-text-primary focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border-strong disabled:hover:text-text-secondary"
-          disabled={!hasProject || isReloadingScreens}
-          onClick={reloadScreens}
-          title={hasProject ? 'Reload screens from screens.json' : 'Open a project folder first'}
+          disabled={isAnalyzeDisabled}
+          onClick={onAnalyzeUi}
+          title={hasProject ? 'Analyze UI' : 'Open a project folder first'}
           type="button"
         >
-          <ArrowPathIcon className={isReloadingScreens ? 'animate-spin' : undefined} />
-          {isReloadingScreens ? 'Loading...' : 'Analyze UI'}
+          <AnalyzeUiIcon active={isAnalyzing} />
+          {isAnalyzing ? 'Analyzing...' : isLoadingScreens ? 'Loading...' : 'Analyze UI'}
         </button>
         <button
           aria-label="Open settings"
-          aria-pressed={activeView === 'settings'}
-          className={cn(
-            ICON_BUTTON_CLASS,
-            activeView === 'settings' &&
-              'border-accent-primary bg-selected text-text-primary hover:bg-selected',
-          )}
-          onClick={onNavigateSettings}
+          className={ICON_BUTTON_CLASS}
+          onClick={handleOpenSettingsClick}
           title="Settings"
           type="button"
         >
@@ -58,22 +78,46 @@ export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHea
   );
 }
 
-function ArrowPathIcon({ className }: { className?: string }) {
+function AnalyzeUiIcon({ active }: { active: boolean }) {
   return (
     <svg
       aria-hidden="true"
-      className={cn('size-4', className)}
+      className="size-4"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <rect height="12" rx="2.5" width="14" x="5" y="6" />
       <path
-        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M7.977 14.652H2.985m0 0v.001m18.03-10.295v4.992m0 0h-4.992m4.992 0-3.181-3.183a8.25 8.25 0 0 0-13.803 3.7"
+        d="M8 10.5h8M8 13.5h5"
+        opacity={active ? 0.55 : 1}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      {active ? (
+        <line opacity="0.8" strokeLinecap="round" x1="7" x2="17" y1="8.25" y2="8.25">
+          <animate
+            attributeName="y1"
+            dur="1.4s"
+            repeatCount="indefinite"
+            values="8.25;15.75;8.25"
+          />
+          <animate
+            attributeName="y2"
+            dur="1.4s"
+            repeatCount="indefinite"
+            values="8.25;15.75;8.25"
+          />
+          <animate
+            attributeName="opacity"
+            dur="1.4s"
+            repeatCount="indefinite"
+            values="0.25;0.85;0.25"
+          />
+        </line>
+      ) : null}
     </svg>
   );
 }

@@ -1,4 +1,4 @@
-import type { WorkspaceDerived, WorkspaceState } from '@shared/types';
+import type { AnalyzeUiResult, WorkspaceDerived, WorkspaceState } from '@shared/types';
 import {
   createContext,
   createElement,
@@ -158,13 +158,28 @@ export function useOpenProjectFolder(): () => void {
   }, []);
 }
 
-/** Re-reads `screens.json` for the current project (e.g. after an external analysis step). */
-export function useReloadWorkspaceScreens(): () => void {
+export function useAnalyzeUi(): () => Promise<AnalyzeUiResult> {
   const { dispatch, loadSeqRef } = useWorkspace();
-  return useCallback(() => {
+
+  return useCallback(async () => {
     const seq = ++loadSeqRef.current;
-    void reloadWorkspaceScreensDocument(dispatch, {
-      shouldAbort: () => seq !== loadSeqRef.current,
-    });
+    let result: AnalyzeUiResult;
+    try {
+      result = await getNavimintBridge().analyzeUi();
+    } catch (error) {
+      result = {
+        ok: false,
+        reason: 'unexpected-error',
+        message: error instanceof Error ? error.message : String(error),
+        filePath: null,
+      };
+    }
+    if (seq !== loadSeqRef.current) {
+      return result;
+    }
+    if (result.ok) {
+      dispatch({ type: 'document-loaded', document: result.document });
+    }
+    return result;
   }, [dispatch, loadSeqRef]);
 }

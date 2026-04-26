@@ -1,5 +1,11 @@
 import type { NavimintBridge } from '@shared/preload/api';
-import type { LoadScreensResult, SavePreviewBaseUrlResult } from '@shared/types';
+import type {
+  AnalyzeUiResult,
+  CursorApiKeyOperationResult,
+  CursorApiKeyStatusResult,
+  LoadScreensResult,
+  SavePreviewBaseUrlResult,
+} from '@shared/types';
 
 /**
  * When the renderer runs in a normal browser (Vite only), Electron preload is
@@ -14,6 +20,29 @@ const BROWSER_DEV_STUB: NavimintBridge = {
       reason: 'no-project-root',
       message: 'Open this app via Electron to load a project folder.',
       filePath: null,
+    }),
+  analyzeUi: (): Promise<AnalyzeUiResult> =>
+    Promise.resolve({
+      ok: false,
+      reason: 'no-project-root',
+      message: 'Open this app via Electron to analyze a project folder.',
+      filePath: null,
+    }),
+  openSettingsWindow: () => Promise.resolve(),
+  getCursorApiKeyStatus: (): Promise<CursorApiKeyStatusResult> =>
+    Promise.resolve({
+      ok: true,
+      status: { configured: false, source: null },
+    }),
+  saveCursorApiKey: (): Promise<CursorApiKeyOperationResult> =>
+    Promise.resolve({
+      ok: false,
+      message: 'Open this app via Electron to save a Cursor API key.',
+    }),
+  deleteCursorApiKey: (): Promise<CursorApiKeyOperationResult> =>
+    Promise.resolve({
+      ok: false,
+      message: 'Open this app via Electron to delete a Cursor API key.',
     }),
   savePreviewBaseUrl: (): Promise<SavePreviewBaseUrlResult> =>
     Promise.resolve({
