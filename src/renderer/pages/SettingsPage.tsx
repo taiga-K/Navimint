@@ -41,13 +41,12 @@ export function SettingsPage() {
   const apiKeyToSave = useMemo(() => apiKeyDraft.trim(), [apiKeyDraft]);
 
   useEffect(() => {
-    if (!isEditingApiKey || apiKeyToSave.length === 0) {
+    if (!isEditingApiKey || apiKeyToSave.length === 0 || deleteState === 'deleting') {
       return;
     }
 
     let active = true;
     const timerId = window.setTimeout(() => {
-      setDeleteState('idle');
       setStatusMessage(null);
 
       void getNavimintBridge()
@@ -70,7 +69,7 @@ export function SettingsPage() {
       active = false;
       window.clearTimeout(timerId);
     };
-  }, [apiKeyToSave, isEditingApiKey]);
+  }, [apiKeyToSave, isEditingApiKey, deleteState]);
 
   async function handleDelete(): Promise<void> {
     setDeleteState('deleting');
