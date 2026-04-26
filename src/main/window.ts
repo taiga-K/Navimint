@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { BrowserWindow } from 'electron';
 
+import { appWindowIconPath } from './app-assets';
+
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 800;
 const SETTINGS_WIDTH = 900;
@@ -14,6 +16,7 @@ function createWindow(options: { width: number; height: number; title?: string }
     title: options.title,
     show: false,
     backgroundColor: '#121212',
+    icon: appWindowIconPath,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
