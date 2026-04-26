@@ -41,9 +41,32 @@ export type SavePreviewBaseUrlResult =
   | SavePreviewBaseUrlSuccess
   | SavePreviewBaseUrlFailure;
 
+export type AnalyzeUiFailureReason =
+  | 'no-project-root'
+  | 'missing-api-key'
+  | 'agent-failed'
+  | 'invalid-agent-output'
+  | 'unexpected-error';
+
+export interface AnalyzeUiSuccess {
+  ok: true;
+  document: ScreensDocument;
+  filePath: string;
+}
+
+export interface AnalyzeUiFailure {
+  ok: false;
+  reason: AnalyzeUiFailureReason;
+  message: string;
+  filePath: string | null;
+}
+
+export type AnalyzeUiResult = AnalyzeUiSuccess | AnalyzeUiFailure;
+
 export const IPC_CHANNELS = {
   loadScreensDocument: 'navimint:screens:load',
   savePreviewBaseUrl: 'navimint:screens:save-preview-base-url',
+  analyzeUi: 'navimint:screens:analyze-ui',
   getProjectRoot: 'navimint:project:get-root',
   openProjectDialog: 'navimint:project:open-dialog',
   /** Push event from main: emitted whenever the active project root changes. */

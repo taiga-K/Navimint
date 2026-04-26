@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import { NAVIMINT_BRIDGE_KEY, type NavimintBridge } from '../shared/preload/api';
 import {
+  type AnalyzeUiResult,
   IPC_CHANNELS,
   type LoadScreensResult,
   type SavePreviewBaseUrlResult,
@@ -17,6 +18,8 @@ import {
 const bridge: NavimintBridge = {
   loadScreensDocument: (): Promise<LoadScreensResult> =>
     ipcRenderer.invoke(IPC_CHANNELS.loadScreensDocument) as Promise<LoadScreensResult>,
+  analyzeUi: (): Promise<AnalyzeUiResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.analyzeUi) as Promise<AnalyzeUiResult>,
   savePreviewBaseUrl: (baseUrl): Promise<SavePreviewBaseUrlResult> =>
     ipcRenderer.invoke(
       IPC_CHANNELS.savePreviewBaseUrl,

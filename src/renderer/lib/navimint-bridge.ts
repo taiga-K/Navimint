@@ -1,5 +1,9 @@
 import type { NavimintBridge } from '@shared/preload/api';
-import type { LoadScreensResult, SavePreviewBaseUrlResult } from '@shared/types';
+import type {
+  AnalyzeUiResult,
+  LoadScreensResult,
+  SavePreviewBaseUrlResult,
+} from '@shared/types';
 
 /**
  * When the renderer runs in a normal browser (Vite only), Electron preload is
@@ -13,6 +17,13 @@ const BROWSER_DEV_STUB: NavimintBridge = {
       ok: false,
       reason: 'no-project-root',
       message: 'Open this app via Electron to load a project folder.',
+      filePath: null,
+    }),
+  analyzeUi: (): Promise<AnalyzeUiResult> =>
+    Promise.resolve({
+      ok: false,
+      reason: 'no-project-root',
+      message: 'Open this app via Electron to analyze a project folder.',
       filePath: null,
     }),
   savePreviewBaseUrl: (): Promise<SavePreviewBaseUrlResult> =>

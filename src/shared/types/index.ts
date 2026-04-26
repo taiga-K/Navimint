@@ -1,4 +1,8 @@
 export type {
+  AnalyzeUiFailure,
+  AnalyzeUiFailureReason,
+  AnalyzeUiResult,
+  AnalyzeUiSuccess,
   LoadScreensFailure,
   LoadScreensFailureReason,
   LoadScreensResult,
