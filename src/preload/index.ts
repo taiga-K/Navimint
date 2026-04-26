@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import { NAVIMINT_BRIDGE_KEY, type NavimintBridge } from '../shared/preload/api';
 import {
   type AnalyzeUiResult,
+  type CursorApiKeyOperationResult,
+  type CursorApiKeyStatusResult,
   IPC_CHANNELS,
   type LoadScreensResult,
   type SavePreviewBaseUrlResult,
@@ -20,6 +22,21 @@ const bridge: NavimintBridge = {
     ipcRenderer.invoke(IPC_CHANNELS.loadScreensDocument) as Promise<LoadScreensResult>,
   analyzeUi: (): Promise<AnalyzeUiResult> =>
     ipcRenderer.invoke(IPC_CHANNELS.analyzeUi) as Promise<AnalyzeUiResult>,
+  openSettingsWindow: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.openSettingsWindow) as Promise<void>,
+  getCursorApiKeyStatus: (): Promise<CursorApiKeyStatusResult> =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.getCursorApiKeyStatus,
+    ) as Promise<CursorApiKeyStatusResult>,
+  saveCursorApiKey: (apiKey): Promise<CursorApiKeyOperationResult> =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.saveCursorApiKey,
+      apiKey,
+    ) as Promise<CursorApiKeyOperationResult>,
+  deleteCursorApiKey: (): Promise<CursorApiKeyOperationResult> =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.deleteCursorApiKey,
+    ) as Promise<CursorApiKeyOperationResult>,
   savePreviewBaseUrl: (baseUrl): Promise<SavePreviewBaseUrlResult> =>
     ipcRenderer.invoke(
       IPC_CHANNELS.savePreviewBaseUrl,

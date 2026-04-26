@@ -3,6 +3,7 @@ import { app, Menu, type MenuItemConstructorOptions } from 'electron';
 export interface BuildAppMenuOptions {
   /** Invoked when the user selects "File > Open Folder...". */
   onOpenProject: () => void;
+  onOpenSettings: () => void;
 }
 
 /**
@@ -14,13 +15,18 @@ export interface BuildAppMenuOptions {
  *
  * Reference: https://www.electronjs.org/ja/docs/latest/tutorial/application-menu
  */
-export function buildAppMenu({ onOpenProject }: BuildAppMenuOptions): Menu {
+export function buildAppMenu({ onOpenProject, onOpenSettings }: BuildAppMenuOptions): Menu {
   const isMac = process.platform === 'darwin';
 
   const macAppMenu: MenuItemConstructorOptions = {
     label: app.name,
     submenu: [
       { role: 'about' },
+      {
+        label: 'Settings...',
+        accelerator: 'CmdOrCtrl+,',
+        click: onOpenSettings,
+      },
       { type: 'separator' },
       { role: 'services' },
       { type: 'separator' },
@@ -40,6 +46,13 @@ export function buildAppMenu({ onOpenProject }: BuildAppMenuOptions): Menu {
         accelerator: 'CmdOrCtrl+O',
         click: onOpenProject,
       },
+      ...(!isMac
+        ? [{
+            label: 'Settings...',
+            accelerator: 'Ctrl+,',
+            click: onOpenSettings,
+          }]
+        : []),
       { type: 'separator' },
       isMac ? { role: 'close' } : { role: 'quit' },
     ],

@@ -6,20 +6,29 @@ import { IPC_CHANNELS } from '../shared/types';
 import { showOpenProjectDialog } from './dialogs/open-project-dialog';
 import { registerProjectIpc } from './ipc/project';
 import { registerScreensIpc } from './ipc/screens';
+import { registerSettingsIpc } from './ipc/settings';
 import { installAppMenu } from './menu';
 import { getProjectRoot, onProjectRootChanged, setProjectRoot } from './project-root';
-import { createMainWindow } from './window';
+import { createMainWindow, createSettingsWindow } from './window';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
+let settingsWindow: BrowserWindow | null = null;
+type RendererView = 'workspace' | 'settings';
 
-async function loadRenderer(window: BrowserWindow): Promise<void> {
+async function loadRenderer(window: BrowserWindow, view: RendererView = 'workspace'): Promise<void> {
   if (isDev) {
     const devServerUrl = process.env.VITE_DEV_SERVER_URL ?? 'http://127.0.0.1:5173';
-    await window.loadURL(devServerUrl);
+    const url = new URL(devServerUrl);
+    if (view === 'settings') {
+      url.searchParams.set('view', view);
+    }
+    await window.loadURL(url.toString());
     return;
   }
-  await window.loadFile(path.join(__dirname, '../renderer/index.html'));
+  await window.loadFile(path.join(__dirname, '../renderer/index.html'), {
+    query: view === 'settings' ? { view } : undefined,
+  });
 }
 
 async function handleOpenProject(): Promise<void> {
@@ -36,13 +45,41 @@ function broadcastProjectRoot(projectRoot: string | null): void {
   }
 }
 
+async function openSettingsWindow(): Promise<void> {
+  if (settingsWindow !== null) {
+    settingsWindow.focus();
+    return;
+  }
+
+  const win = createSettingsWindow();
+  settingsWindow = win;
+  win.once('closed', () => {
+    if (settingsWindow === win) {
+      settingsWindow = null;
+    }
+  });
+  await loadRenderer(win, 'settings');
+}
+
 async function bootstrap(): Promise<void> {
   registerScreensIpc({ getProjectRoot });
   registerProjectIpc();
+  registerSettingsIpc({
+    openSettingsWindow: () => {
+      void openSettingsWindow().catch((error) => {
+        console.error('[main] openSettingsWindow failed', error);
+      });
+    },
+  });
   installAppMenu({
     onOpenProject: () => {
       void handleOpenProject().catch((error) => {
         console.error('[main] handleOpenProject failed', error);
+      });
+    },
+    onOpenSettings: () => {
+      void openSettingsWindow().catch((error) => {
+        console.error('[main] openSettingsWindow failed', error);
       });
     },
   });

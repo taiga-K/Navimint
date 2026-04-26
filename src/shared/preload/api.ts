@@ -1,5 +1,7 @@
 import type {
   AnalyzeUiResult,
+  CursorApiKeyOperationResult,
+  CursorApiKeyStatusResult,
   LoadScreensResult,
   SavePreviewBaseUrlResult,
 } from '../types';
@@ -12,6 +14,14 @@ export interface NavimintBridge {
   loadScreensDocument(): Promise<LoadScreensResult>;
   /** Analyzes the active project and persists a generated screens.json. */
   analyzeUi(): Promise<AnalyzeUiResult>;
+  /** Opens the application settings window. */
+  openSettingsWindow(): Promise<void>;
+  /** Returns whether a Cursor API key is configured without exposing the key. */
+  getCursorApiKeyStatus(): Promise<CursorApiKeyStatusResult>;
+  /** Stores a Cursor API key in the OS credential store. */
+  saveCursorApiKey(apiKey: string): Promise<CursorApiKeyOperationResult>;
+  /** Removes the Cursor API key stored by Navimint. */
+  deleteCursorApiKey(): Promise<CursorApiKeyOperationResult>;
   /** Persists `project.baseURL` in the active project's screens.json. */
   savePreviewBaseUrl(baseUrl: string): Promise<SavePreviewBaseUrlResult>;
   /** Returns the project root currently held by the main process. */

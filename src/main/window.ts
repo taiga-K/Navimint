@@ -4,11 +4,14 @@ import { BrowserWindow } from 'electron';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 800;
+const SETTINGS_WIDTH = 900;
+const SETTINGS_HEIGHT = 680;
 
-export function createMainWindow(): BrowserWindow {
+function createWindow(options: { width: number; height: number; title?: string }): BrowserWindow {
   const window = new BrowserWindow({
-    width: DEFAULT_WIDTH,
-    height: DEFAULT_HEIGHT,
+    width: options.width,
+    height: options.height,
+    title: options.title,
     show: false,
     backgroundColor: '#121212',
     webPreferences: {
@@ -32,4 +35,16 @@ export function createMainWindow(): BrowserWindow {
   });
 
   return window;
+}
+
+export function createMainWindow(): BrowserWindow {
+  return createWindow({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT });
+}
+
+export function createSettingsWindow(): BrowserWindow {
+  return createWindow({
+    width: SETTINGS_WIDTH,
+    height: SETTINGS_HEIGHT,
+    title: 'Settings',
+  });
 }

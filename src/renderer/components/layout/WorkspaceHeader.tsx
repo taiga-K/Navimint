@@ -4,11 +4,8 @@ import { useAnalyzeUi, useWorkspace } from '../../features/workspace/use-workspa
 import { cn } from '../../lib/cn';
 import { compactProjectLabel } from '../../lib/project-label';
 
-export type AppView = 'workspace' | 'settings';
-
 interface WorkspaceHeaderProps {
-  activeView: AppView;
-  onNavigateSettings: () => void;
+  onOpenSettings: () => void;
 }
 
 const ANALYSIS_FEEDBACK_MS = 3200;
@@ -20,7 +17,7 @@ type AnalysisFeedback =
   | { kind: 'success'; message: string }
   | { kind: 'error'; message: string };
 
-export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHeaderProps) {
+export function WorkspaceHeader({ onOpenSettings }: WorkspaceHeaderProps) {
   const { state } = useWorkspace();
   const analyzeUi = useAnalyzeUi();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -54,6 +51,10 @@ export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHea
       .finally(() => {
         setIsAnalyzing(false);
       });
+  }
+
+  function handleOpenSettingsClick(): void {
+    onOpenSettings();
   }
 
   return (
@@ -90,13 +91,8 @@ export function WorkspaceHeader({ activeView, onNavigateSettings }: WorkspaceHea
         </button>
         <button
           aria-label="Open settings"
-          aria-pressed={activeView === 'settings'}
-          className={cn(
-            ICON_BUTTON_CLASS,
-            activeView === 'settings' &&
-              'border-accent-primary bg-selected text-text-primary hover:bg-selected',
-          )}
-          onClick={onNavigateSettings}
+          className={ICON_BUTTON_CLASS}
+          onClick={handleOpenSettingsClick}
           title="Settings"
           type="button"
         >

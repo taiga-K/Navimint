@@ -12,6 +12,11 @@ import {
   parseAgentScreensDocument,
 } from '../analysis/parse-agent-screens-document';
 import { runAnalyzeUi } from '../analysis/run-analyze-ui';
+import {
+  CursorApiKeyNotConfiguredError,
+  getCursorApiKeyStatus,
+  resolveCursorApiKey,
+} from '../credentials/cursor-api-key';
 import { readScreensDocument } from '../utils/read-screens-document';
 import { savePreviewBaseUrl } from '../utils/save-preview-base-url';
 import { errorMessage } from '../utils/value-guards';
@@ -71,24 +76,23 @@ async function analyzeUi(options: { projectRoot: string | null }): Promise<Analy
     };
   }
 
-  const apiKey = process.env.CURSOR_API_KEY?.trim();
-  if (apiKey === undefined || apiKey.length === 0) {
-    return {
-      ok: false,
-      reason: 'missing-api-key',
-      message: 'CURSOR_API_KEY is not configured.',
-      filePath: null,
-    };
-  }
-
   let rawDocument: string;
   try {
+    const baseURL = await resolveAnalyzeBaseUrl(options.projectRoot);
     rawDocument = await runAnalyzeUi({
       projectRoot: options.projectRoot,
-      baseURL: await resolveAnalyzeBaseUrl(options.projectRoot),
-      apiKey,
+      baseURL,
+      apiKey: await resolveCursorApiKey(),
     });
   } catch (error) {
+    if (error instanceof CursorApiKeyNotConfiguredError) {
+      return {
+        ok: false,
+        reason: 'missing-api-key',
+        message: error.message,
+        filePath: null,
+      };
+    }
     return {
       ok: false,
       reason: 'agent-failed',
