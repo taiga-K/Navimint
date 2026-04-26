@@ -10,6 +10,8 @@ type CopyState = 'idle' | 'copied' | 'error';
 
 const ICON_BUTTON_CLASS =
   'inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-text-muted transition-colors duration-[120ms] hover:bg-elevated hover:text-text-primary focus:outline-none focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-text-muted';
+const PREVIEW_IFRAME_SANDBOX =
+  'allow-downloads allow-forms allow-same-origin allow-scripts';
 
 interface PreviewSectionProps {
   baseUrl: string;
@@ -213,7 +215,7 @@ function PreviewFrame({
           key={`${previewUrl.href}:${reloadNonce}`}
           onLoad={onLoad}
           referrerPolicy="no-referrer"
-          sandbox="allow-downloads allow-forms allow-scripts"
+          sandbox={PREVIEW_IFRAME_SANDBOX}
           src={previewUrl.href}
           title={`Preview: ${screenName}`}
         />
