@@ -62,6 +62,12 @@ export function SettingsPage() {
           setStatus(result.status);
           setApiKeyDraft('');
           setIsEditingApiKey(false);
+        })
+        .catch(() => {
+          if (!active) {
+            return;
+          }
+          setStatusMessage('Failed to save the API key. Please try again.');
         });
     }, API_KEY_SAVE_DEBOUNCE_MS);
 
@@ -75,17 +81,22 @@ export function SettingsPage() {
     setDeleteState('deleting');
     setStatusMessage(null);
 
-    const result = await getNavimintBridge().deleteCursorApiKey();
-    if (!result.ok) {
-      setDeleteState('idle');
-      setStatusMessage(result.message);
-      return;
-    }
+    try {
+      const result = await getNavimintBridge().deleteCursorApiKey();
+      if (!result.ok) {
+        setDeleteState('idle');
+        setStatusMessage(result.message);
+        return;
+      }
 
-    setStatus(result.status);
-    setApiKeyDraft('');
-    setIsEditingApiKey(false);
-    setDeleteState('idle');
+      setStatus(result.status);
+      setApiKeyDraft('');
+      setIsEditingApiKey(false);
+      setDeleteState('idle');
+    } catch {
+      setDeleteState('idle');
+      setStatusMessage('Failed to delete the API key. Please try again.');
+    }
   }
 
   const canDelete = deleteState !== 'deleting' && status.source === 'keychain';

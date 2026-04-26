@@ -17,7 +17,11 @@ export async function runAnalyzeUi(options: RunAnalyzeUiOptions): Promise<string
     local: { cwd: options.projectRoot },
   });
 
-  if (result.result === undefined || result.result.trim().length === 0) {
+  if (
+    result.result === undefined ||
+    result.result === null ||
+    result.result.trim().length === 0
+  ) {
     const streamedJson = await runAnalyzeUiWithStream(prompt, options);
     if (streamedJson !== null) {
       return streamedJson;
@@ -27,7 +31,11 @@ export async function runAnalyzeUi(options: RunAnalyzeUiOptions): Promise<string
   if (result.status !== 'finished') {
     throw new Error(`Cursor agent finished with status "${result.status}"`);
   }
-  if (result.result === undefined || result.result.trim().length === 0) {
+  if (
+    result.result === undefined ||
+    result.result === null ||
+    result.result.trim().length === 0
+  ) {
     throw new Error('Cursor agent returned an empty result');
   }
   return result.result;
@@ -56,7 +64,11 @@ async function runAnalyzeUiWithStream(
   } catch {
     return null;
   } finally {
-    await agent[Symbol.asyncDispose]();
+    try {
+      await agent[Symbol.asyncDispose]();
+    } catch {
+      // Disposal errors must not replace a successful return or the catch fallback.
+    }
   }
 }
 
