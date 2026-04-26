@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, BrowserWindow } from 'electron';
 
 import { IPC_CHANNELS } from '../shared/types';
+import { appIconPngPath } from './app-assets';
 import { showOpenProjectDialog } from './dialogs/open-project-dialog';
 import { registerProjectIpc } from './ipc/project';
 import { registerScreensIpc } from './ipc/screens';
@@ -62,6 +63,7 @@ async function openSettingsWindow(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+  app.dock?.setIcon(appIconPngPath);
   registerScreensIpc({ getProjectRoot });
   registerProjectIpc();
   registerSettingsIpc({
