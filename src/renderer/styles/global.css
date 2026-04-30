@@ -1,0 +1,186 @@
+/*
+ * Navimint global stylesheet.
+ *
+ * Loads the design-system font families and exposes the design tokens defined
+ * in `design-system/navimint/MASTER.md` as Tailwind theme variables. Tailwind
+ * utility classes such as `bg-app`, `text-text-primary`, `font-sans`, or
+ * `rounded-lg` map to the documented values without further configuration.
+ */
+
+@import 'tailwindcss';
+
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/noto-sans-jp/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+
+@theme {
+  /*
+   * Background tokens follow the neutral grayscale palette:
+   *   main   #121212 -> --color-app
+   *   base   #515151 -> --color-border-strong
+   *   assets #919191 -> --color-text-muted
+   * Intermediate steps are interpolated to keep panel / elevated / selected
+   * distinguishable while staying on the same achromatic axis.
+   */
+  --color-app: #121212;
+  --color-panel: #1a1a1a;
+  --color-panel-muted: #0a0a0a;
+  --color-elevated: #262626;
+  --color-selected: #2f2f2f;
+
+  --color-border-subtle: #2e2e2e;
+  --color-border-strong: #515151;
+
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #c8c8c8;
+  --color-text-muted: #919191;
+
+  --color-accent-primary: #60a5fa;
+  --color-accent-success: #22c55e;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #f87171;
+  --color-accent-node: #a78bfa;
+
+  --font-sans: 'Inter Variable', 'Noto Sans JP Variable', 'Inter', 'Noto Sans JP', system-ui,
+    sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.25rem;
+  --text-md: 0.875rem;
+  --text-md--line-height: 1.25rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.4rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.6rem;
+  --text-mono-sm: 0.75rem;
+  --text-mono-sm--line-height: 1rem;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-panel: 0 8px 24px rgb(0 0 0 / 0.5);
+  --shadow-focus: 0 0 0 3px rgb(96 165 250 / 0.28);
+}
+
+:root {
+  color-scheme: dark;
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 220ms;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-app);
+  font-feature-settings:
+    'cv11' on,
+    'ss01' on,
+    'ss03' on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  font-feature-settings:
+    'liga' off,
+    'calt' off;
+}
+
+::selection {
+  background-color: rgb(96 165 250 / 0.35);
+  color: var(--color-text-primary);
+}
+
+.react-flow {
+  --xy-background-color: var(--color-app);
+  --xy-node-border-default: var(--color-border-strong);
+  --xy-edge-stroke-default: var(--color-border-strong);
+  --xy-edge-stroke-selected-default: var(--color-accent-primary);
+  --xy-controls-button-background-color-default: var(--color-panel);
+  --xy-controls-button-background-color-hover-default: var(--color-elevated);
+  --xy-controls-button-color-default: var(--color-text-secondary);
+  --xy-controls-button-color-hover-default: var(--color-text-primary);
+  --xy-controls-button-border-color-default: var(--color-border-subtle);
+}
+
+.react-flow__pane {
+  cursor: grab;
+}
+
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+
+.react-flow__controls {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.react-flow__controls-button {
+  border-bottom-color: var(--color-border-subtle);
+}
+
+.react-flow__edge.transition-edge.animated .react-flow__edge-path {
+  stroke-dasharray: 8 6;
+  animation: navimint-edge-flow 850ms linear infinite;
+}
+
+.react-flow__edge.transition-edge--incoming .react-flow__edge-path,
+.react-flow__edge.transition-edge--outgoing .react-flow__edge-path,
+.react-flow__edge.transition-edge--self .react-flow__edge-path {
+  filter: drop-shadow(0 0 4px rgb(96 165 250 / 0.45));
+}
+
+.react-flow__attribution {
+  color: var(--color-text-muted);
+  background-color: var(--color-panel-muted);
+}
+
+@keyframes navimint-edge-flow {
+  from {
+    stroke-dashoffset: 14;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
